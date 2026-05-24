@@ -735,7 +735,28 @@ export const MEETING_POINTS = {
   'Ondina': 'Monumento às Gordinhas (Ondina)',
   'Caminho das Árvores': 'Salvador Shopping (Praça de Alimentação)',
   'Bonfim': 'Colina Sagrada (Igreja do Bonfim)',
-  'Brotas': 'Arena Fonte Nova (Entrada Dique)'
+  'Brotas': 'Arena Fonte Nova (Entrada Dique)',
+  'Cabula': 'Plaza Shopping Cabula (Praça Central)',
+  'Imbuí': 'Praça do Imbuí (Barracas de Pastel)',
+  'Stella Maris': 'Praça de Stella Maris',
+  'Stiep': 'FIB/Estácio (Entrada Principal)',
+  'Graça': 'Masp - Museu de Arte da Bahia',
+  'Vitória': 'Corredor da Vitória (Largo do Campo Grande)',
+  'Campo Grande': 'Largo do Campo Grande (Praça Central)',
+  'Liberdade': 'Largo da Lapinha (Praça Principal)',
+  'Cajazeiras': 'Shopping Cajazeiras (Praça Central)',
+  'Mussurunga': 'Estação de Integração Mussurunga',
+  'Patamares': 'Parque de Pituaçu (Entrada)',
+  'Piatã': 'Orla de Piatã (Quadras de Esporte)',
+  'Costa Azul': 'Parque Costa Azul (Estacionamento)',
+  'Amaralina': 'Largo de Amaralina (Calçadão)',
+  'Horto Florestal': 'Almacen Pepe Horto (Entrada)',
+  'Pernambués': 'Praça de Pernambués',
+  'Paripe': 'Praça de Paripe (Largo Principal)',
+  'Periperi': 'Praça da Revolução (Periperi)',
+  'Federação': 'Praça de Esportes da Federação',
+  'Canela': 'Reitoria da UFBA (Largo do Canela)',
+  'São Caetano': 'Largo do Tanque (Entrada Principal)'
 };
 
 // --- MÉTODOS DE SEGURANÇA E BLOQUEIO (CONFORMIDADE LGPD E PROTEÇÃO) ---

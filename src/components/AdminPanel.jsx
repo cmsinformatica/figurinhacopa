@@ -376,9 +376,32 @@ export default function AdminPanel() {
                     <option value="Rio Vermelho" style={{ background: 'var(--bg-primary)' }}>Rio Vermelho</option>
                     <option value="Pituba" style={{ background: 'var(--bg-primary)' }}>Pituba</option>
                     <option value="Pelourinho" style={{ background: 'var(--bg-primary)' }}>Pelourinho</option>
-                    <option value="Caminho das Árvores" style={{ background: 'var(--bg-primary)' }}>Caminho das Árvores</option>
+                    <option value="Itapuã" style={{ background: 'var(--bg-primary)' }}>Itapuã</option>
                     <option value="Ondina" style={{ background: 'var(--bg-primary)' }}>Ondina</option>
+                    <option value="Caminho das Árvores" style={{ background: 'var(--bg-primary)' }}>Caminho das Árvores</option>
+                    <option value="Bonfim" style={{ background: 'var(--bg-primary)' }}>Bonfim</option>
                     <option value="Brotas" style={{ background: 'var(--bg-primary)' }}>Brotas</option>
+                    <option value="Cabula" style={{ background: 'var(--bg-primary)' }}>Cabula</option>
+                    <option value="Imbuí" style={{ background: 'var(--bg-primary)' }}>Imbuí</option>
+                    <option value="Stella Maris" style={{ background: 'var(--bg-primary)' }}>Stella Maris</option>
+                    <option value="Stiep" style={{ background: 'var(--bg-primary)' }}>Stiep</option>
+                    <option value="Graça" style={{ background: 'var(--bg-primary)' }}>Graça</option>
+                    <option value="Vitória" style={{ background: 'var(--bg-primary)' }}>Vitória</option>
+                    <option value="Campo Grande" style={{ background: 'var(--bg-primary)' }}>Campo Grande</option>
+                    <option value="Liberdade" style={{ background: 'var(--bg-primary)' }}>Liberdade</option>
+                    <option value="Cajazeiras" style={{ background: 'var(--bg-primary)' }}>Cajazeiras</option>
+                    <option value="Mussurunga" style={{ background: 'var(--bg-primary)' }}>Mussurunga</option>
+                    <option value="Patamares" style={{ background: 'var(--bg-primary)' }}>Patamares</option>
+                    <option value="Piatã" style={{ background: 'var(--bg-primary)' }}>Piatã</option>
+                    <option value="Costa Azul" style={{ background: 'var(--bg-primary)' }}>Costa Azul</option>
+                    <option value="Amaralina" style={{ background: 'var(--bg-primary)' }}>Amaralina</option>
+                    <option value="Horto Florestal" style={{ background: 'var(--bg-primary)' }}>Horto Florestal</option>
+                    <option value="Pernambués" style={{ background: 'var(--bg-primary)' }}>Pernambués</option>
+                    <option value="Paripe" style={{ background: 'var(--bg-primary)' }}>Paripe</option>
+                    <option value="Periperi" style={{ background: 'var(--bg-primary)' }}>Periperi</option>
+                    <option value="Federação" style={{ background: 'var(--bg-primary)' }}>Federação</option>
+                    <option value="Canela" style={{ background: 'var(--bg-primary)' }}>Canela</option>
+                    <option value="São Caetano" style={{ background: 'var(--bg-primary)' }}>São Caetano</option>
                   </select>
                 </div>
 
