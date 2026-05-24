@@ -121,9 +121,32 @@ export default function App() {
     }
   };
 
-  const handleProfileUpdate = (newProfile) => {
-    setProfile(newProfile);
-    saveUserProfile(newProfile);
+  const handleProfileUpdate = async (newProfile) => {
+    // Normaliza campos tanto para camelCase quanto para snake_case
+    const merged = {
+      ...newProfile,
+      favorite_team: newProfile.favoriteTeam || newProfile.favorite_team || 'BRA',
+      favoriteTeam: newProfile.favoriteTeam || newProfile.favorite_team || 'BRA',
+      completed_trades: newProfile.completedTrades || newProfile.completed_trades || 0,
+      completedTrades: newProfile.completedTrades || newProfile.completed_trades || 0,
+    };
+    setProfile(merged);
+    saveUserProfile(merged);
+
+    // Persiste no Supabase se estiver logado
+    if (session?.user?.id) {
+      try {
+        const { error } = await supabase.from('profiles').update({
+          name: merged.name,
+          neighborhood: merged.neighborhood,
+          favorite_team: merged.favorite_team,
+        }).eq('id', session.user.id);
+        if (error) console.warn('[Supabase] Erro ao salvar perfil:', error.message);
+        else console.log('[Supabase] Perfil atualizado com sucesso.');
+      } catch (err) {
+        console.warn('[Supabase] Falha ao atualizar perfil:', err.message);
+      }
+    }
   };
 
   const handleSyncTrigger = () => {
@@ -144,6 +167,7 @@ export default function App() {
   const [realMatches, setRealMatches] = useState([]);
   const [realStats, setRealStats] = useState({ collectorsCount: 1, tradesCount: 0, onlineCount: 1 });
   const [realLeaderboard, setRealLeaderboard] = useState([]);
+  const [allProfiles, setAllProfiles] = useState([]);
 
   // Sincroniza e busca os matches e estatísticas reais do Supabase
   useEffect(() => {
@@ -156,6 +180,22 @@ export default function App() {
 
         const calculatedLeaderboard = await fetchRealLeaderboard(profile, album);
         setRealLeaderboard(calculatedLeaderboard);
+
+        // Busca todos os perfis reais do Supabase em tempo real
+        const { data: allProfilesData } = await supabase
+          .from('profiles')
+          .select('*');
+        if (allProfilesData) {
+          setAllProfiles(allProfilesData.map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.avatar || p.name.substring(0, 2).toUpperCase(),
+            neighborhood: p.neighborhood,
+            favoriteTeam: p.favorite_team,
+            completedTrades: p.completed_trades || 0,
+            rating: p.rating || 5.0
+          })));
+        }
 
         // Busca estatísticas reais de cadastrados e trocas
         const { count: cCount } = await supabase
@@ -245,6 +285,9 @@ export default function App() {
             setActiveCollectorId={setActiveChatCollectorId} 
             album={album}
             onAlbumUpdate={handleAlbumUpdate}
+            collectors={allProfiles}
+            profile={profile}
+            realMatches={realMatches}
           />
         )}
 

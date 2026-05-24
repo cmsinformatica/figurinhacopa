@@ -8,6 +8,7 @@ export default function AdminPanel() {
   const [metrics, setMetrics] = useState({ totalUsers: 0, avgProgress: 0, totalEvents: 0 });
   const [showEventModal, setShowEventModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');  // Substitui alert() nativo
 
   // Formulário de Novo Evento
   const [eventTitle, setEventTitle] = useState('');
@@ -60,7 +61,7 @@ export default function AdminPanel() {
       setMetrics({
         totalUsers,
         avgProgress,
-        totalEvents: eventsCount || 3
+        totalEvents: eventsCount || 0  // Sem fallback fictício
       });
 
     } catch (err) {
@@ -106,7 +107,8 @@ export default function AdminPanel() {
       }, 2000);
 
     } catch (err) {
-      alert('Erro ao criar evento: ' + err.message);
+      setErrorMsg('Erro ao criar evento: ' + err.message);
+      setTimeout(() => setErrorMsg(''), 4000);
     }
   };
 
@@ -123,7 +125,8 @@ export default function AdminPanel() {
       // Atualiza estado local
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_admin: newAdminStatus } : u));
     } catch (err) {
-      alert('Erro ao alterar status admin: ' + err.message);
+      setErrorMsg('Erro ao alterar status admin: ' + err.message);
+      setTimeout(() => setErrorMsg(''), 4000);
     }
   };
 
@@ -140,6 +143,13 @@ export default function AdminPanel() {
   return (
     <div className="animate-slide-up" style={{ paddingBottom: '80px' }}>
       
+      {/* Toast de Erro (substitui alert nativo) */}
+      {errorMsg && (
+        <div style={{ background: 'var(--error-light)', color: 'var(--error)', border: '1px solid rgba(255,75,85,0.2)', padding: '10px 14px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          ⚠️ {errorMsg}
+        </div>
+      )}
+
       {/* Cabeçalho */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  MOCK_COLLECTORS, 
   getTrades, 
   getMessages, 
   saveMessages, 
@@ -22,7 +21,8 @@ const STICKER_DETAILS = {
   'FRA-10': { name: 'K. Mbappé', flag: '🇫🇷', country: 'França', isSpecial: true }
 };
 
-export default function ChatTab({ activeCollectorId, setActiveCollectorId, album, onAlbumUpdate }) {
+export default function ChatTab({ activeCollectorId, setActiveCollectorId, album, onAlbumUpdate, collectors = [], profile, realMatches = [] }) {
+  const currentUserId = profile?.id || null;
   const [messages, setMessages] = useState(() => getMessages());
   const [trades, setTrades] = useState(() => getTrades());
   const [textInput, setTextInput] = useState('');
@@ -45,16 +45,16 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
     reloadData();
     
     let channel = null;
-    if (activeCollectorId && isSupabaseConfigured()) {
+    if (activeCollectorId && currentUserId && isSupabaseConfigured()) {
       channel = supabase
-        .channel(`public:messages:receiver_user_cristiano`)
+        .channel(`public:messages:receiver_${currentUserId}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
             table: 'messages',
-            filter: `receiver_id=eq.user_cristiano`
+            filter: `receiver_id=eq.${currentUserId}`
           },
           (payload) => {
             console.log('[Supabase Realtime] Nova mensagem recebida:', payload.new);
@@ -89,19 +89,19 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
   }, [messages, activeCollectorId]);
 
   // Colecionadores com chats ativos (excluindo os bloqueados para segurança e LGPD)
-  const activeChatsList = MOCK_COLLECTORS.filter(collector => {
+  const activeChatsList = (collectors || []).filter(collector => {
     return !isUserBlocked(collector.id) && 
            (messages.some(m => m.senderId === collector.id || m.receiverId === collector.id) ||
             trades.some(t => t.collectorId === collector.id));
   });
 
-  const activeCollector = MOCK_COLLECTORS.find(c => c.id === activeCollectorId);
+  const activeCollector = (collectors || []).find(c => c.id === activeCollectorId);
   const activeTrade = trades.find(t => t.collectorId === activeCollectorId && t.status === 'pending') ||
                       trades.filter(t => t.collectorId === activeCollectorId && t.status !== 'pending').sort((a,b) => b.createdAt - a.createdAt)[0];
 
   const activeMessages = messages.filter(m => m.tradeId === activeTrade?.id || 
-    ((m.senderId === activeCollectorId && m.receiverId === 'user_cristiano') || 
-     (m.senderId === 'user_cristiano' && m.receiverId === activeCollectorId))
+    ((m.senderId === activeCollectorId && m.receiverId === currentUserId) || 
+     (m.senderId === currentUserId && m.receiverId === activeCollectorId))
   );
 
   const handleSendMessage = (e) => {
@@ -111,7 +111,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
     const userMessageId = 'msg_user_' + Date.now();
     const newMsg = {
       id: userMessageId,
-      senderId: 'user_cristiano',
+      senderId: currentUserId,
       receiverId: activeCollectorId,
       content: textInput,
       timestamp: Date.now(),
@@ -135,7 +135,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
       const botResponse = {
         id: 'msg_bot_reply_' + Date.now(),
         senderId: activeCollectorId,
-        receiverId: 'user_cristiano',
+        receiverId: currentUserId,
         content: responses[Math.floor(Math.random() * responses.length)],
         timestamp: Date.now(),
         tradeId: activeTrade?.id || null
@@ -152,7 +152,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
     const userMessageId = 'msg_user_' + Date.now();
     const newMsg = {
       id: userMessageId,
-      senderId: 'user_cristiano',
+      senderId: currentUserId,
       receiverId: activeCollectorId,
       content: `[Foto da Figurinha ${code} Anexada]`,
       timestamp: Date.now(),
@@ -174,7 +174,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
       const botResponse = {
         id: 'msg_bot_reply_' + Date.now(),
         senderId: activeCollectorId,
-        receiverId: 'user_cristiano',
+        receiverId: currentUserId,
         content: responses[Math.floor(Math.random() * responses.length)],
         timestamp: Date.now(),
         tradeId: activeTrade?.id || null
@@ -293,7 +293,12 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
 
                   <div style={{ textAlign: 'right', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
                     <div>{collector.distance}</div>
-                    <div style={{ marginTop: '4px', fontWeight: 'bold', color: 'var(--success)' }}>Match {collector.id === 'user_thiago' ? '80%' : '30%'}</div>
+                    <div style={{ marginTop: '4px', fontWeight: 'bold', color: 'var(--success)' }}>
+                      Match {(() => {
+                        const m = realMatches.find(r => r.id === collector.id);
+                        return m ? `${m.score}%` : '—';
+                      })()}
+                    </div>
                   </div>
                 </div>
               );
@@ -365,7 +370,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
         </div>
 
         <div style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', marginRight: '4px' }}>
-          ★ {activeCollector.id === 'user_thiago' ? '4.9' : '4.6'}
+          ★ {activeCollector.rating || 5.0}
         </div>
 
         {/* Botão de Denúncia/Bloqueio (PRD F05) */}
@@ -614,7 +619,7 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
 
             {/* Histórico das Mensagens */}
             {activeMessages.map((msg) => {
-              const isUser = msg.senderId === 'user_cristiano';
+              const isUser = currentUserId ? msg.senderId === currentUserId : msg.senderId !== activeCollectorId && msg.senderId !== 'system';
               const isSys = msg.senderId === 'system';
 
               if (isSys) {

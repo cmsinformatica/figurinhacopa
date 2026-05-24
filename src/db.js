@@ -135,98 +135,7 @@ export const getStickersList = () => {
 };
 
 // Mapeamento dos colecionadores com repetidas e faltantes com base na lista de 48 países
-export const MOCK_COLLECTORS = [
-  {
-    id: 'user_cristiano',
-    name: 'Cristiano Martins',
-    avatar: 'CR',
-    neighborhood: 'Barra',
-    distance: '800m',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['BRA-10', 'ARG-10', 'POR-07', 'FRA-01', 'GER-10', 'USA-10', 'NOR-09', 'ENG-10', 'MEX-01', 'CAN-01'],
-    missingStickers: ['BRA-01', 'BRA-09', 'ARG-02', 'FRA-10', 'GER-02', 'KOR-07', 'EGY-10', 'CRO-10', 'JPN-01', 'URU-01']
-  },
-  {
-    id: 'user_thiago',
-    name: 'Thiago Silva',
-    avatar: 'TS',
-    neighborhood: 'Rio Vermelho',
-    distance: '1.2km',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['FRA-10', 'GER-01', 'GER-02', 'POR-10', 'KOR-07', 'EGY-10', 'CRO-10', 'JPN-01', 'URU-01'],
-    missingStickers: ['BRA-10', 'BRA-05', 'FRA-02', 'ARG-10', 'USA-10', 'NOR-09', 'MEX-01', 'CAN-01']
-  },
-  {
-    id: 'user_maria',
-    name: 'Maria Oliveira',
-    avatar: 'MO',
-    neighborhood: 'Pituba',
-    distance: '2.5km',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['ARG-02', 'BRA-01', 'GER-05', 'USA-01', 'KOR-01'],
-    missingStickers: ['POR-07', 'GER-10', 'ENG-10', 'FRA-01']
-  },
-  {
-    id: 'user_acacio',
-    name: 'Acácio Souza',
-    avatar: 'AS',
-    neighborhood: 'Pelourinho',
-    distance: '3.1km',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['POR-07', 'USA-10', 'MEX-01', 'CAN-01'],
-    missingStickers: ['BRA-01', 'BRA-09', 'GER-02']
-  },
-  {
-    id: 'user_gabriela',
-    name: 'Gabriela Neves',
-    avatar: 'GN',
-    neighborhood: 'Itapuã',
-    distance: '5.4km',
-    favoriteTeam: 'Portugal',
-    extraStickers: ['NOR-09', 'ARG-10', 'ENG-10', 'URU-01'],
-    missingStickers: ['BRA-09', 'ARG-02']
-  },
-  {
-    id: 'user_lucas',
-    name: 'Lucas Lima',
-    avatar: 'LL',
-    neighborhood: 'Ondina',
-    distance: '1.5km',
-    favoriteTeam: 'Alemanha',
-    extraStickers: ['BRA-10', 'GER-10', 'FRA-01', 'KOR-01'],
-    missingStickers: ['BRA-01', 'GER-02']
-  },
-  {
-    id: 'user_sandra',
-    name: 'Sandra Rocha',
-    avatar: 'SR',
-    neighborhood: 'Caminho das Árvores',
-    distance: '2.8km',
-    favoriteTeam: 'Argentina',
-    extraStickers: ['BRA-01', 'BRA-09', 'ARG-02'],
-    missingStickers: ['POR-07', 'USA-10', 'NOR-09']
-  },
-  {
-    id: 'user_mateus',
-    name: 'Mateus Santos',
-    avatar: 'MS',
-    neighborhood: 'Bonfim',
-    distance: '4.2km',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['USA-10', 'FRA-10', 'GER-02'],
-    missingStickers: ['BRA-09', 'ARG-02']
-  },
-  {
-    id: 'user_juliana',
-    name: 'Juliana Costa',
-    avatar: 'JC',
-    neighborhood: 'Brotas',
-    distance: '2.2km',
-    favoriteTeam: 'Brasil',
-    extraStickers: ['POR-07', 'BRA-09', 'ARG-10'],
-    missingStickers: ['BRA-01', 'GER-02']
-  }
-];
+export const MOCK_COLLECTORS = [];
 
 // BADGES oficiais da Gamificação
 export const BADGES = [
@@ -351,24 +260,8 @@ export const syncAllDataWithSupabase = async () => {
     console.warn('[Supabase Sync Warning] Falha ao sincronizar perfil:', err.message);
   }
 
-  // 2. Garantir que os eventos iniciais de Salvador existam no Supabase
-  try {
-    const eventRows = MOCK_EVENTS.map(evt => ({
-      id: toUuid(evt.id),
-      title: evt.title,
-      local: evt.local,
-      date: evt.date,
-      initial_attendees: evt.initialAttendees,
-      neighborhood: evt.neighborhood
-    }));
-    const { error: eventsError } = await supabase
-      .from('events')
-      .upsert(eventRows);
-    if (eventsError) throw eventsError;
-    console.log('[Supabase Sync] Eventos de Salvador verificados/criados na nuvem.');
-  } catch (err) {
-    console.warn('[Supabase Sync Warning] Falha ao sincronizar eventos:', err.message);
-  }
+  // 2. Eventos são gerenciados exclusivamente pelo Painel Admin — sem sincronização automática de eventos aqui
+  console.log('[Supabase Sync] Eventos gerenciados via Painel Admin.');
 
   // 3. Sincronizar álbum
   await syncAlbumWithSupabase();
@@ -465,13 +358,16 @@ export const saveUserAlbum = (album) => {
 export const initUserProfile = () => {
   const key = 'figucopa_user_profile';
   if (!localStorage.getItem(key)) {
+    // Perfil inicial vazio — será preenchido pelo Supabase Auth ao fazer login
     const defaultProfile = {
-      id: 'user_cristiano',
-      name: 'Cristiano Martins',
+      id: null,
+      name: 'Colecionador',
       neighborhood: 'Barra',
       favoriteTeam: 'BRA',
+      favorite_team: 'BRA',
       completedTrades: 0,
-      rating: 4.8
+      completed_trades: 0,
+      rating: 5.0
     };
     localStorage.setItem(key, JSON.stringify(defaultProfile));
   }
@@ -522,7 +418,8 @@ export const saveMessages = (messages) => {
   if (isSupabaseConfigured()) {
     const profile = getUserProfile();
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg && (lastMsg.senderId === profile.id || lastMsg.senderId === 'user_cristiano')) {
+    // Sincroniza apenas mensagens enviadas pelo usuário atual (não sys/bot)
+    if (lastMsg && profile?.id && lastMsg.senderId === profile.id && lastMsg.senderId !== 'system') {
       supabase.from('messages').insert([{
         sender_id: toUuid(lastMsg.senderId),
         receiver_id: toUuid(lastMsg.receiverId),
@@ -539,6 +436,9 @@ export const saveMessages = (messages) => {
 export const proposeTrade = (collectorId, youSend, youReceive) => {
   const trades = getTrades();
   const messages = getMessages();
+  const profile = getUserProfile();
+  const currentUserId = profile?.id || 'user_local';
+  const currentUserName = profile?.name || 'Colecionador';
   
   // Verifica se já existe uma proposta pendente com este colecionador
   const existingTrade = trades.find(t => t.collectorId === collectorId && t.status === 'pending');
@@ -559,14 +459,13 @@ export const proposeTrade = (collectorId, youSend, youReceive) => {
   trades.push(newTrade);
   saveTrades(trades);
 
-  // Envia mensagem mockada do colecionador aceitando conversar sobre a troca
-  const collectorName = MOCK_COLLECTORS.find(c => c.id === collectorId)?.name || 'Colecionador';
+  // Mensagem do sistema confirmando a proposta
   const newMessages = [
     ...messages,
     {
       id: 'msg_sys_' + Date.now(),
       senderId: 'system',
-      receiverId: 'user_cristiano',
+      receiverId: currentUserId,
       content: `Proposta de Troca criada! Você enviará: ${youSend.join(', ')} e receberá: ${youReceive.join(', ')}.`,
       timestamp: Date.now() - 2000,
       tradeId: tradeId
@@ -574,8 +473,8 @@ export const proposeTrade = (collectorId, youSend, youReceive) => {
     {
       id: 'msg_bot_' + Date.now(),
       senderId: collectorId,
-      receiverId: 'user_cristiano',
-      content: `Olá Cristiano! Gostei muito do match de trocas. Eu tenho essas figurinhas que você quer (${youReceive.join(', ')}) e você tem as que eu preciso. Quer fechar o encontro para trocar?`,
+      receiverId: currentUserId,
+      content: `Olá ${currentUserName}! Gostei muito do match de trocas. Eu tenho as figurinhas que você quer (${youReceive.slice(0, 3).join(', ')}${youReceive.length > 3 ? '...' : ''}) e você tem as que eu preciso. Quer fechar o encontro para trocar? ⚽`,
       timestamp: Date.now(),
       tradeId: tradeId
     }
@@ -624,12 +523,13 @@ export const acceptTrade = (tradeId, album, onAlbumUpdate) => {
   // Insere mensagens de sucesso no chat
   const messages = getMessages();
   const collectorId = trade.collectorId;
+  const currentUserId = profile?.id || 'user_local';
   const newMessages = [
     ...messages,
     {
       id: 'msg_sys_acc_' + Date.now(),
       senderId: 'system',
-      receiverId: 'user_cristiano',
+      receiverId: currentUserId,
       content: `Troca aceita! Seu álbum foi atualizado com as novas figurinhas.`,
       timestamp: Date.now(),
       tradeId: tradeId
@@ -637,7 +537,7 @@ export const acceptTrade = (tradeId, album, onAlbumUpdate) => {
     {
       id: 'msg_bot_acc_' + Date.now(),
       senderId: collectorId,
-      receiverId: 'user_cristiano',
+      receiverId: currentUserId,
       content: `Excelente! Figurinhas trocadas com sucesso. Foi muito bom negociar com você! Que tal nos avaliarmos? ⚽🤝`,
       timestamp: Date.now() + 500,
       tradeId: tradeId
@@ -658,14 +558,16 @@ export const rejectTrade = (tradeId) => {
   trades[tradeIndex].status = 'rejected';
   saveTrades(trades);
   
-  // Envia mensagem mockada avisando no chat
+  // Mensagem do sistema informando a recusa
   const messages = getMessages();
+  const profileLocal = getUserProfile();
+  const currentUserId = profileLocal?.id || 'user_local';
   const newMessages = [
     ...messages,
     {
       id: 'msg_sys_rej_' + Date.now(),
       senderId: 'system',
-      receiverId: 'user_cristiano',
+      receiverId: currentUserId,
       content: `A proposta de troca foi recusada/cancelada.`,
       timestamp: Date.now(),
       tradeId: tradeId
@@ -778,23 +680,27 @@ export const isUserBlocked = (userId) => {
 
 // --- LEADERBOARD DE SALVADOR (COMPETIÇÃO SAUDÁVEL E GAMIFICAÇÃO) ---
 
+// Retorna apenas o usuário atual como fallback — o ranking real vem do Supabase via fetchRealLeaderboard
 export const getSalvadorLeaderboard = (album, profile) => {
+  if (!profile) return [];
   const totalStickersCount = getStickersList().length;
   const userOwnedCount = Object.keys(album).filter(id => album[id]?.owned).length;
   const userProgress = Math.round((userOwnedCount / totalStickersCount) * 100);
+  const avatar = profile.avatar || (profile.name || 'C').substring(0, 2).toUpperCase();
   
-  const rawLeaderboard = [
-    { id: 'user_cristiano', name: profile.name, avatar: 'CR', neighborhood: profile.neighborhood, progress: userProgress, completedTrades: profile.completedTrades, rating: profile.rating, isCurrentUser: true },
-    { id: 'user_thiago', name: 'Thiago Silva', avatar: 'TS', neighborhood: 'Rio Vermelho', progress: 84, completedTrades: 11, rating: 4.9 },
-    { id: 'user_maria', name: 'Maria Oliveira', avatar: 'MO', neighborhood: 'Pituba', progress: 76, completedTrades: 8, rating: 4.8 },
-    { id: 'user_acacio', name: 'Acácio Souza', avatar: 'AS', neighborhood: 'Pelourinho', progress: 71, completedTrades: 6, rating: 4.7 },
-    { id: 'user_juliana', name: 'Juliana Costa', avatar: 'JC', neighborhood: 'Brotas', progress: 68, completedTrades: 5, rating: 4.6 },
-    { id: 'user_lucas', name: 'Lucas Lima', avatar: 'LL', neighborhood: 'Ondina', progress: 62, completedTrades: 4, rating: 4.8 },
-    { id: 'user_sandra', name: 'Sandra Rocha', avatar: 'SR', neighborhood: 'Caminho das Árvores', progress: 59, completedTrades: 3, rating: 4.5 }
+  // Sem dados fictícios — retorna somente o usuário atual para o fallback offline
+  return [
+    {
+      id: profile.id,
+      name: profile.name || 'Colecionador',
+      avatar,
+      neighborhood: profile.neighborhood || 'Salvador',
+      progress: userProgress,
+      completedTrades: profile.completedTrades || profile.completed_trades || 0,
+      rating: profile.rating || 5.0,
+      isCurrentUser: true
+    }
   ];
-  
-  // Ordena por progresso e depois por número de trocas e avaliação
-  return rawLeaderboard.sort((a, b) => b.progress - a.progress || b.completedTrades - a.completedTrades);
 };
 
 // Calcula matches bilaterais baseado no álbum do usuário logado e filtra bloqueados
@@ -809,7 +715,7 @@ export const calculateMatches = () => {
   const userMissing = Object.keys(userAlbum).filter(id => !userAlbum[id].owned);
   
   return MOCK_COLLECTORS
-    // Filtra o próprio Cristiano Martins para não dar match consigo mesmo e ignora os bloqueados
+    // Filtra o próprio usuário logado para não dar match consigo mesmo e ignora os bloqueados
     .filter(col => col.id !== profile.id && !blockedList.includes(col.id))
     .map(col => {
       // Figurinhas que ele tem repetidas que eu preciso
@@ -990,32 +896,7 @@ export const fetchRealLeaderboard = async (currentUserProfile, currentUserAlbum)
 };
 
 // --- MOCK DE EVENTOS DE TROCAS EM SALVADOR-BA (PRD F07) ---
-export const MOCK_EVENTS = [
-  {
-    id: 'event_barra',
-    title: 'Mega Encontro Farol da Barra 📅',
-    local: 'Farol da Barra (Orla - Gramado Principal)',
-    date: 'Sábado, 30/Maio às 15:00h',
-    initialAttendees: 42,
-    neighborhood: 'Barra'
-  },
-  {
-    id: 'event_shopping',
-    title: 'Encontro Gamer de Trocas 🎮',
-    local: 'Shopping da Bahia (Praça de Alimentação - L3)',
-    date: 'Domingo, 31/Maio às 14:00h',
-    initialAttendees: 28,
-    neighborhood: 'Caminho das Árvores'
-  },
-  {
-    id: 'event_mariquita',
-    title: 'Troca das Estrelas Largo da Mariquita ⚽',
-    local: 'Largo da Mariquita (Rio Vermelho - Food Trucks)',
-    date: 'Quarta-feira, 03/Junho às 18:30h',
-    initialAttendees: 19,
-    neighborhood: 'Rio Vermelho'
-  }
-];
+export const MOCK_EVENTS = [];
 
 export const getConfirmedEvents = () => {
   return JSON.parse(localStorage.getItem('figucopa_confirmed_events') || '[]');

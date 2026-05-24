@@ -72,7 +72,7 @@ export default function AlbumGrid({ album, onAlbumUpdate }) {
 
   // Copiar resumo do álbum para compartilhar no WhatsApp
   const handleShareAlbum = () => {
-    const userProfile = JSON.parse(localStorage.getItem('figucopa_user_profile') || '{"name": "Cristiano Martins", "neighborhood": "Barra"}');
+    const userProfile = JSON.parse(localStorage.getItem('figucopa_user_profile') || '{"name": "Colecionador", "neighborhood": "Salvador"}');
     
     const myExtras = allStickers.filter(st => album[st.id]?.extra > 0).map(st => `${st.code} (+${album[st.id].extra})`);
     const myMissing = allStickers.filter(st => !album[st.id]?.owned).map(st => st.code);

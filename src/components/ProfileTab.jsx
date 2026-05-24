@@ -5,7 +5,8 @@ import { User, MapPin, Award, Shield, Download, Trash2, CheckCircle2, ChevronDow
 export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpdate, realLeaderboard }) {
   const [name, setName] = useState(profile?.name || '');
   const [neighborhood, setNeighborhood] = useState(profile?.neighborhood || 'Barra');
-  const [favoriteTeam, setFavoriteTeam] = useState(profile?.favoriteTeam || 'BRA');
+  // Suporte a snake_case (Supabase) e camelCase (estado local)
+  const [favoriteTeam, setFavoriteTeam] = useState(profile?.favorite_team || profile?.favoriteTeam || 'BRA');
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
@@ -13,7 +14,7 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
     if (profile) {
       setName(profile.name || '');
       setNeighborhood(profile.neighborhood || 'Barra');
-      setFavoriteTeam(profile.favoriteTeam || 'BRA');
+      setFavoriteTeam(profile.favorite_team || profile.favoriteTeam || 'BRA');
     }
   }, [profile]);
 
@@ -136,10 +137,10 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
           </p>
           <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
             <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.04)', color: 'var(--text-secondary)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>
-              ★ {profile.rating}
+              ★ {profile.rating || 5.0}
             </span>
             <span style={{ fontSize: '0.65rem', background: 'var(--success-light)', color: 'var(--success)', border: '1px solid rgba(79,243,37,0.15)', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>
-              {profile.completedTrades} troca(s)
+              {profile.completed_trades || profile.completedTrades || 0} troca(s)
             </span>
           </div>
         </div>
