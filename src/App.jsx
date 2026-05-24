@@ -7,7 +7,7 @@ import ProfileTab from './components/ProfileTab.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import { supabase } from './supabaseClient.js';
-import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase, fetchRealCollectorsAndCalculateMatches } from './db.js';
+import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase, fetchRealCollectorsAndCalculateMatches, fetchRealLeaderboard } from './db.js';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('matches');
@@ -143,6 +143,7 @@ export default function App() {
 
   const [realMatches, setRealMatches] = useState([]);
   const [realStats, setRealStats] = useState({ collectorsCount: 1, tradesCount: 0, onlineCount: 1 });
+  const [realLeaderboard, setRealLeaderboard] = useState([]);
 
   // Sincroniza e busca os matches e estatísticas reais do Supabase
   useEffect(() => {
@@ -152,6 +153,9 @@ export default function App() {
       try {
         const calculatedMatches = await fetchRealCollectorsAndCalculateMatches(profile, album);
         setRealMatches(calculatedMatches);
+
+        const calculatedLeaderboard = await fetchRealLeaderboard(profile, album);
+        setRealLeaderboard(calculatedLeaderboard);
 
         // Busca estatísticas reais de cadastrados e trocas
         const { count: cCount } = await supabase
@@ -250,6 +254,7 @@ export default function App() {
             onAlbumUpdate={handleAlbumUpdate}
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
+            realLeaderboard={realLeaderboard}
           />
         )}
 

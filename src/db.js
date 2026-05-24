@@ -915,6 +915,80 @@ export const fetchRealCollectorsAndCalculateMatches = async (currentUserProfile,
   }
 };
 
+// Busca o ranking real de colecionadores de Salvador baseando-se no Supabase em tempo real
+export const fetchRealLeaderboard = async (currentUserProfile, currentUserAlbum) => {
+  if (!isSupabaseConfigured() || !currentUserProfile) {
+    return [];
+  }
+  try {
+    const userUuid = toUuid(currentUserProfile.id);
+
+    // 1. Busca todos os perfis cadastrados no Supabase
+    const { data: profiles, error: pError } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (pError) throw pError;
+    if (!profiles || profiles.length === 0) return [];
+
+    // 2. Busca as figurinhas que estão coladas (owned = true) de todos os usuários
+    const { data: userStickers, error: sError } = await supabase
+      .from('user_stickers')
+      .select('user_id, owned')
+      .eq('owned', true);
+
+    if (sError) throw sError;
+
+    // 3. Constrói o ranking de forma dinâmica
+    const leaderboard = profiles.map(p => {
+      const isCurrentUser = p.id === userUuid;
+      
+      let ownedCount = 0;
+      if (isCurrentUser) {
+        // Para o usuário atual logado, calcula direto do estado do React (garante reatividade imediata)
+        ownedCount = Object.keys(currentUserAlbum).filter(id => currentUserAlbum[id]?.owned).length;
+      } else {
+        ownedCount = userStickers ? userStickers.filter(s => s.user_id === p.id).length : 0;
+      }
+
+      // Progresso com base no álbum de 980 figurinhas
+      const progress = Math.round((ownedCount / 980) * 100);
+
+      return {
+        id: fromUuid(p.id),
+        name: p.name,
+        avatar: p.avatar || p.name.substring(0, 2).toUpperCase(),
+        neighborhood: p.neighborhood,
+        progress,
+        completedTrades: p.completed_trades || 0,
+        rating: p.rating || 5.0,
+        isCurrentUser
+      };
+    });
+
+    // 4. Ordena por maior progresso, depois por número de trocas e avaliação
+    return leaderboard.sort((a, b) => b.progress - a.progress || b.completedTrades - a.completedTrades);
+
+  } catch (err) {
+    console.error('[Supabase Realtime Leaderboard Error]', err.message);
+    const totalStickersCount = getStickersList().length;
+    const userOwnedCount = Object.keys(currentUserAlbum).filter(id => currentUserAlbum[id]?.owned).length;
+    const userProgress = Math.round((userOwnedCount / totalStickersCount) * 100);
+    return [
+      {
+        id: currentUserProfile.id,
+        name: currentUserProfile.name,
+        avatar: currentUserProfile.avatar || 'CR',
+        neighborhood: currentUserProfile.neighborhood,
+        progress: userProgress,
+        completedTrades: currentUserProfile.completedTrades || 0,
+        rating: currentUserProfile.rating || 5.0,
+        isCurrentUser: true
+      }
+    ];
+  }
+};
+
 // --- MOCK DE EVENTOS DE TROCAS EM SALVADOR-BA (PRD F07) ---
 export const MOCK_EVENTS = [
   {

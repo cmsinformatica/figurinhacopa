@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SELECTIONS, BADGES, getUnlockedBadges, getStickersList, getSalvadorLeaderboard } from '../db.js';
 import { User, MapPin, Award, Shield, Download, Trash2, CheckCircle2, ChevronDown, Sparkles, Trophy } from 'lucide-react';
 
-export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpdate }) {
+export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpdate, realLeaderboard }) {
   const [name, setName] = useState(profile?.name || '');
   const [neighborhood, setNeighborhood] = useState(profile?.neighborhood || 'Barra');
   const [favoriteTeam, setFavoriteTeam] = useState(profile?.favoriteTeam || 'BRA');
@@ -393,7 +393,7 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
 
         {/* Tabela de Ranking */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {getSalvadorLeaderboard(album, profile).map((leader, idx) => {
+          {(realLeaderboard || []).map((leader, idx) => {
             const isMe = leader.isCurrentUser;
             const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`;
             return (
