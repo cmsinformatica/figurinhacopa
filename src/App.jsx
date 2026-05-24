@@ -4,22 +4,75 @@ import MatchFeed from './components/MatchFeed.jsx';
 import AlbumGrid from './components/AlbumGrid.jsx';
 import ChatTab from './components/ChatTab.jsx';
 import ProfileTab from './components/ProfileTab.jsx';
-import OfflineBanner from './components/OfflineBanner.jsx';
+import AuthScreen from './components/AuthScreen.jsx';
+import AdminPanel from './components/AdminPanel.jsx';
+import { supabase } from './supabaseClient.js';
 import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase } from './db.js';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('matches');
-  const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
-  const [album, setAlbum] = useState(() => getUserAlbum());
-  const [profile, setProfile] = useState(() => getUserProfile());
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const [album, setAlbum] = useState({});
+  const [profile, setProfile] = useState(null);
   const [activeChatCollectorId, setActiveChatCollectorId] = useState(null);
 
+  // Controla simulação offline
+  const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
+
   useEffect(() => {
-    syncAllDataWithSupabase().then(() => {
-      setAlbum(getUserAlbum());
-      setProfile(getUserProfile());
+    // 1. Recupera sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        // Carrega o perfil real do banco na nuvem
+        supabase.from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: userProfile }) => {
+            if (userProfile) {
+              setProfile(userProfile);
+              localStorage.setItem('figucopa_user_profile', JSON.stringify(userProfile));
+            }
+          });
+        setAlbum(getUserAlbum());
+      }
+      setLoadingSession(false);
     });
+
+    // 2. Escuta mudanças na autenticação (Login / Cadastro / Logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        supabase.from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: userProfile }) => {
+            if (userProfile) {
+              setProfile(userProfile);
+              localStorage.setItem('figucopa_user_profile', JSON.stringify(userProfile));
+              // Sincroniza dados na nuvem de forma assíncrona
+              syncAllDataWithSupabase().then(() => {
+                setAlbum(getUserAlbum());
+              });
+            }
+          });
+      } else {
+        localStorage.removeItem('figucopa_user_profile');
+        localStorage.removeItem('figucopa_user_album');
+        setProfile(null);
+        setAlbum({});
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const handleAlbumUpdate = (newAlbum) => {
     setAlbum(newAlbum);
@@ -60,10 +113,34 @@ export default function App() {
 
   const matches = calculateMatches();
 
+  if (loadingSession) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>⚽</div>
+        <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fff' }}>Carregando Arena...</h3>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen onAuthSuccess={(sess) => setSession(sess)} />;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', transition: 'var(--transition)' }}>
       {/* Header / Navegação */}
-      <Header currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      <Header 
+        currentTab={currentTab} 
+        setCurrentTab={setCurrentTab} 
+        isAdmin={profile?.is_admin} 
+        onLogout={handleLogout} 
+      />
 
       {/* Área de Conteúdo Principal (Centralizada e Responsiva) */}
       <main
@@ -100,6 +177,10 @@ export default function App() {
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
           />
+        )}
+
+        {currentTab === 'admin' && profile?.is_admin && (
+          <AdminPanel />
         )}
       </main>
     </div>

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, MessageSquare, User, RefreshCw, Activity } from 'lucide-react';
+import { Trophy, MessageSquare, User, RefreshCw, Activity, Award, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle.jsx';
 import { getTrades } from '../db.js';
 
-export default function Header({ currentTab, setCurrentTab }) {
+export default function Header({ currentTab, setCurrentTab, isAdmin, onLogout }) {
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
@@ -79,7 +79,29 @@ export default function Header({ currentTab, setCurrentTab }) {
         </div>
 
         {/* Tab Navigation (Lucide Icons + Neon Shadow Active) */}
-        <nav style={{ display: 'flex', gap: '4px' }}>
+        <nav style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          {isAdmin && (
+            <button
+              onClick={() => setCurrentTab('admin')}
+              title="Painel Admin"
+              style={{
+                background: currentTab === 'admin' ? 'var(--warning-light)' : 'transparent',
+                border: 'none',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                color: currentTab === 'admin' ? 'var(--warning)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'var(--transition)',
+                boxShadow: currentTab === 'admin' ? '0 0 10px rgba(255, 178, 0, 0.15)' : 'none'
+              }}
+            >
+              <Award size={16} />
+            </button>
+          )}
+
           <button
             onClick={() => setCurrentTab('matches')}
             title="Matches de Troca"
@@ -182,6 +204,29 @@ export default function Header({ currentTab, setCurrentTab }) {
           >
             <User size={16} />
           </button>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              title="Sair da Conta"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                color: 'var(--error)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--error-light)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <LogOut size={16} />
+            </button>
+          )}
         </nav>
 
         {/* Theme Toggle Container */}

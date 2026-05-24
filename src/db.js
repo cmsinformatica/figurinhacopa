@@ -448,7 +448,7 @@ export const saveUserAlbum = (album) => {
   if (isSupabaseConfigured()) {
     const profile = getUserProfile();
     const rows = Object.keys(album).map(id => ({
-      user_id: profile.id,
+      user_id: toUuid(profile.id),
       sticker_id: id,
       owned: album[id].owned,
       extra: album[id].extra
@@ -505,9 +505,10 @@ export const saveTrades = (trades) => {
   localStorage.setItem('figucopa_trades', JSON.stringify(trades));
   
   if (isSupabaseConfigured()) {
+    const profile = getUserProfile();
     const rows = trades.map(t => ({
-      sender_id: 'user_cristiano',
-      receiver_id: t.collectorId,
+      sender_id: toUuid(profile.id),
+      receiver_id: toUuid(t.collectorId),
       you_send: t.youSend,
       you_receive: t.youReceive,
       status: t.status,
@@ -529,11 +530,12 @@ export const saveMessages = (messages) => {
   localStorage.setItem('figucopa_messages', JSON.stringify(messages));
   
   if (isSupabaseConfigured()) {
+    const profile = getUserProfile();
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg && lastMsg.senderId === 'user_cristiano') {
+    if (lastMsg && (lastMsg.senderId === profile.id || lastMsg.senderId === 'user_cristiano')) {
       supabase.from('messages').insert([{
-        sender_id: lastMsg.senderId,
-        receiver_id: lastMsg.receiverId,
+        sender_id: toUuid(lastMsg.senderId),
+        receiver_id: toUuid(lastMsg.receiverId),
         content: lastMsg.content,
         sticker_photo_code: lastMsg.stickerPhotoCode || null
       }]).then(({ error }) => {
@@ -868,12 +870,14 @@ export const toggleEventConfirmation = (eventId) => {
   
   if (isSupabaseConfigured()) {
     const profile = getUserProfile();
+    const userUuid = toUuid(profile.id);
+    const eventUuid = toUuid(eventId);
     if (added) {
-      supabase.from('event_confirmations').insert([{ event_id: eventId, user_id: profile.id }]).then(({ error }) => {
+      supabase.from('event_confirmations').insert([{ event_id: eventUuid, user_id: userUuid }]).then(({ error }) => {
         if (error) console.error('[Supabase Error] Falha ao confirmar presença:', error.message);
       });
     } else {
-      supabase.from('event_confirmations').delete().match({ event_id: eventId, user_id: profile.id }).then(({ error }) => {
+      supabase.from('event_confirmations').delete().match({ event_id: eventUuid, user_id: userUuid }).then(({ error }) => {
         if (error) console.error('[Supabase Error] Falha ao remover presença:', error.message);
       });
     }
