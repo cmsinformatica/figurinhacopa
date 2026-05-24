@@ -20,22 +20,60 @@ export default function App() {
   // Controla simulação offline
   const [isOfflineSimulated, setIsOfflineSimulated] = useState(false);
 
+  const loadOrCreateUserProfile = async (sessionUser) => {
+    try {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', sessionUser.id)
+        .single();
+
+      if (userProfile) {
+        setProfile(userProfile);
+        localStorage.setItem('figucopa_user_profile', JSON.stringify(userProfile));
+        return userProfile;
+      } else {
+        const meta = sessionUser.user_metadata || {};
+        const newProfile = {
+          id: sessionUser.id,
+          name: meta.name || 'Colecionador',
+          neighborhood: meta.neighborhood || 'Barra',
+          favorite_team: meta.favorite_team || 'BRA',
+          distance: '0m',
+          completed_trades: 0,
+          rating: 5.0,
+          avatar: '⚽',
+          is_admin: false
+        };
+        await supabase.from('profiles').upsert([newProfile]);
+        setProfile(newProfile);
+        localStorage.setItem('figucopa_user_profile', JSON.stringify(newProfile));
+        return newProfile;
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar ou criar perfil, usando local:', err.message);
+      const fallback = {
+        id: sessionUser.id,
+        name: 'Colecionador',
+        neighborhood: 'Barra',
+        favorite_team: 'BRA',
+        completed_trades: 0,
+        rating: 5.0,
+        avatar: '⚽',
+        is_admin: false
+      };
+      setProfile(fallback);
+      localStorage.setItem('figucopa_user_profile', JSON.stringify(fallback));
+      return fallback;
+    }
+  };
+
   useEffect(() => {
     // 1. Recupera sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        // Carrega o perfil real do banco na nuvem
-        supabase.from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: userProfile }) => {
-            if (userProfile) {
-              setProfile(userProfile);
-              localStorage.setItem('figucopa_user_profile', JSON.stringify(userProfile));
-            }
-          });
+        loadOrCreateUserProfile(session.user);
         setAlbum(getUserAlbum());
       }
       setLoadingSession(false);
@@ -45,20 +83,12 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        supabase.from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: userProfile }) => {
-            if (userProfile) {
-              setProfile(userProfile);
-              localStorage.setItem('figucopa_user_profile', JSON.stringify(userProfile));
-              // Sincroniza dados na nuvem de forma assíncrona
-              syncAllDataWithSupabase().then(() => {
-                setAlbum(getUserAlbum());
-              });
-            }
+        loadOrCreateUserProfile(session.user).then(() => {
+          // Sincroniza dados na nuvem de forma assíncrona
+          syncAllDataWithSupabase().then(() => {
+            setAlbum(getUserAlbum());
           });
+        });
       } else {
         localStorage.removeItem('figucopa_user_profile');
         localStorage.removeItem('figucopa_user_album');
