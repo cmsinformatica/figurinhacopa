@@ -1,61 +1,75 @@
-/* Custom Properties para Tema Claro e Escuro */
+/* 🌌 FiguCopa 2026 - Stadium-Gamer UI & Design System */
+
 :root {
   /* Font Family */
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* Tema Claro (FIFA Sporty) */
-  --bg-primary: hsl(220, 20%, 97%);
-  --bg-secondary: hsl(0, 0%, 100%);
-  --bg-tertiary: hsl(220, 14%, 90%);
-  --border: hsl(220, 12%, 84%);
-  --text-primary: hsl(224, 71%, 4%);
-  --text-secondary: hsl(220, 9%, 40%);
+  /* 🏟️ Tema Escuro Padrão (Estádio Iluminado com Neon) */
+  --bg-primary: hsl(224, 28%, 6%);
+  --bg-secondary: rgba(18, 25, 41, 0.65);
+  --bg-tertiary: rgba(28, 38, 58, 0.8);
+  --bg-secondary-rgb: 18, 25, 41;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  
+  --text-primary: hsl(220, 20%, 96%);
+  --text-secondary: hsl(220, 9%, 76%);
   --text-tertiary: hsl(220, 8%, 56%);
   
-  --accent: hsl(210, 100%, 45%);
-  --accent-hover: hsl(210, 100%, 38%);
-  --accent-light: hsl(210, 100%, 94%);
+  /* Cores Neon Esportivas de Alta Vibração */
+  --accent: hsl(217, 100%, 56%); /* Azul Elétrico Vibrante */
+  --accent-hover: hsl(217, 100%, 66%);
+  --accent-light: rgba(37, 117, 252, 0.15);
   
-  --success: hsl(142, 70%, 35%);
-  --success-light: hsl(142, 60%, 94%);
-  --warning: hsl(38, 92%, 46%);
-  --warning-light: hsl(38, 92%, 94%);
-  --error: hsl(354, 70%, 45%);
-  --error-light: hsl(354, 70%, 94%);
+  --success: hsl(145, 95%, 45%); /* Verde-Neon de Atividade */
+  --success-light: rgba(79, 243, 37, 0.1);
   
-  --gold: hsl(43, 96%, 48%);
+  --warning: hsl(38, 95%, 50%); /* Laranja Esportivo */
+  --warning-light: rgba(255, 178, 0, 0.1);
   
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(18, 30, 50, 0.05), 0 1px 3px rgba(18, 30, 50, 0.02);
-  --shadow-lg: 0 12px 24px rgba(18, 30, 50, 0.08), 0 4px 8px rgba(18, 30, 50, 0.04);
+  --error: hsl(350, 95%, 58%); /* Vermelho Impactante */
+  --error-light: rgba(255, 110, 132, 0.1);
   
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --gold: hsl(43, 96%, 50%); /* Dourado Lendário Cintilante */
+  
+  /* Efeitos Especiais de Profundidade */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  
+  --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --backdrop-blur: blur(16px);
 }
 
-[data-theme="dark"] {
-  /* Tema Escuro (Premium Gamer/Neon) */
-  --bg-primary: hsl(224, 18%, 8%);
-  --bg-secondary: hsl(224, 18%, 12%);
-  --bg-tertiary: hsl(224, 18%, 18%);
-  --border: hsl(224, 12%, 20%);
-  --text-primary: hsl(220, 20%, 96%);
-  --text-secondary: hsl(220, 9%, 70%);
-  --text-tertiary: hsl(220, 8%, 50%);
+[data-theme="light"] {
+  /* 🏟️ Tema Claro Opcional (Estádio Diurno Esportivo) */
+  --bg-primary: hsl(220, 25%, 95%);
+  --bg-secondary: rgba(255, 255, 255, 0.75);
+  --bg-tertiary: rgba(235, 240, 248, 0.85);
+  --bg-secondary-rgb: 255, 255, 255;
+  --border: rgba(18, 25, 41, 0.08);
+  --border-hover: rgba(18, 25, 41, 0.18);
   
-  --accent: hsl(210, 100%, 55%);
-  --accent-hover: hsl(210, 100%, 65%);
-  --accent-light: hsl(210, 100%, 15%);
+  --text-primary: hsl(224, 71%, 4%);
+  --text-secondary: hsl(220, 9%, 36%);
+  --text-tertiary: hsl(220, 8%, 56%);
   
-  --success: hsl(142, 70%, 45%);
-  --success-light: hsl(142, 60%, 12%);
-  --warning: hsl(38, 92%, 55%);
-  --warning-light: hsl(38, 92%, 14%);
-  --error: hsl(354, 70%, 55%);
-  --error-light: hsl(354, 70%, 14%);
+  --accent: hsl(217, 95%, 48%);
+  --accent-hover: hsl(217, 95%, 38%);
+  --accent-light: rgba(21, 101, 216, 0.1);
   
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --success: hsl(145, 90%, 35%);
+  --success-light: rgba(79, 243, 37, 0.08);
+  
+  --warning: hsl(38, 90%, 42%);
+  --warning-light: rgba(255, 178, 0, 0.08);
+  
+  --error: hsl(350, 90%, 45%);
+  --error-light: rgba(255, 110, 132, 0.08);
+  
+  --shadow-sm: 0 1px 2px rgba(18, 25, 41, 0.04);
+  --shadow-md: 0 8px 20px rgba(18, 25, 41, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-lg: 0 16px 32px rgba(18, 25, 41, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* Reset Global e Estilos Básicos */
@@ -69,6 +83,10 @@
 body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(37, 117, 252, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(79, 243, 37, 0.03) 0%, transparent 40%);
+  background-attachment: fixed;
   color: var(--text-primary);
   transition: var(--transition);
   min-height: 100vh;
@@ -79,9 +97,25 @@ button, input, select {
   font-family: inherit;
 }
 
-/* Scrollbar premium */
+/* Efeito Vidro Premium (.glass-ethereal) */
+.glass-ethereal {
+  background: var(--bg-secondary);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.glass-ethereal:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Scrollbar Premium Estádio */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-primary);
@@ -89,23 +123,137 @@ button, input, select {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 10px;
+  border: 2px solid var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
 }
 
-/* Utilitários de Animação e Efeitos */
-@keyframes slideUp {
+/* 🟢 Ponto Pulsar de Status Online */
+.pulse-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--success);
+  box-shadow: 0 0 0 rgba(79, 243, 37, 0.7);
+  animation: pulseGreen 1.6s infinite;
+  margin-right: 6px;
+}
+
+/* 🚀 Animações Avançadas e Tickers */
+@keyframes pulseGreen {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 243, 37, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(79, 243, 37, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(79, 243, 37, 0);
+  }
+}
+
+@keyframes scrollMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes fadeInScale {
   from {
-    transform: translateY(20px);
+    transform: scale(0.95);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: scale(1);
     opacity: 1;
   }
 }
 
+@keyframes floatSticker {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+/* Utilitários de Carrossel Infinito (Marquee) */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  width: 100%;
+  background: rgba(18, 25, 41, 0.8);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  box-sizing: border-box;
+}
+
+.marquee-track {
+  display: flex;
+  gap: 30px;
+  animation: scrollMarquee 25s linear infinite;
+  width: max-content;
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Utilitários de Animação de Entrada */
 .animate-slide-up {
-  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.card-physical {
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+/* Reflexo reflexivo diagonal nos cards físicos */
+.card-physical::after {
+  content: '';
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.05) 50%, transparent 60%);
+  transform: rotate(0deg);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.card-physical:hover::after {
+  transform: translate(50%, 50%);
+}
+
+.glow-gold {
+  position: relative;
+}
+
+/* Brilho pulsante de metal dourado para figurinhas Especiais */
+.glow-gold::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--gold), var(--warning), var(--gold));
+  z-index: -1;
+  opacity: 0.75;
+  animation: pulseGoldGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGoldGlow {
+  0% { opacity: 0.55; filter: blur(2px); }
+  100% { opacity: 0.85; filter: blur(5px); }
 }

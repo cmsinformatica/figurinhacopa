@@ -1,0 +1,27 @@
+# Build & Cache directories
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables (Crucial Security)
+.env
+.env.production
+.env.development
+.env.local
+.env.*.local
+
+# Editor & System files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Agent system folders
+.agents/
+.superpowers/
+*.log
