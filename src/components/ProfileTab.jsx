@@ -1,13 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SELECTIONS, BADGES, getUnlockedBadges, getStickersList, getSalvadorLeaderboard } from '../db.js';
 import { User, MapPin, Award, Shield, Download, Trash2, CheckCircle2, ChevronDown, Sparkles, Trophy } from 'lucide-react';
 
 export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpdate }) {
-  const [name, setName] = useState(profile.name);
-  const [neighborhood, setNeighborhood] = useState(profile.neighborhood);
-  const [favoriteTeam, setFavoriteTeam] = useState(profile.favoriteTeam);
+  const [name, setName] = useState(profile?.name || '');
+  const [neighborhood, setNeighborhood] = useState(profile?.neighborhood || 'Barra');
+  const [favoriteTeam, setFavoriteTeam] = useState(profile?.favoriteTeam || 'BRA');
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || '');
+      setNeighborhood(profile.neighborhood || 'Barra');
+      setFavoriteTeam(profile.favoriteTeam || 'BRA');
+    }
+  }, [profile]);
+
+  if (!profile) {
+    return (
+      <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '24px', border: '1px solid var(--border)' }} className="animate-slide-up">
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem', animation: 'spin 2s linear infinite' }}>⚽</div>
+        <h4 style={{ fontWeight: 800, color: '#fff' }}>Sincronizando Arena...</h4>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Buscando perfil do jogador no Supabase</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   const handleSave = (e) => {
     e.preventDefault();
