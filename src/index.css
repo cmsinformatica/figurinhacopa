@@ -1,0 +1,111 @@
+/* Custom Properties para Tema Claro e Escuro */
+:root {
+  /* Font Family */
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* Tema Claro (FIFA Sporty) */
+  --bg-primary: hsl(220, 20%, 97%);
+  --bg-secondary: hsl(0, 0%, 100%);
+  --bg-tertiary: hsl(220, 14%, 90%);
+  --border: hsl(220, 12%, 84%);
+  --text-primary: hsl(224, 71%, 4%);
+  --text-secondary: hsl(220, 9%, 40%);
+  --text-tertiary: hsl(220, 8%, 56%);
+  
+  --accent: hsl(210, 100%, 45%);
+  --accent-hover: hsl(210, 100%, 38%);
+  --accent-light: hsl(210, 100%, 94%);
+  
+  --success: hsl(142, 70%, 35%);
+  --success-light: hsl(142, 60%, 94%);
+  --warning: hsl(38, 92%, 46%);
+  --warning-light: hsl(38, 92%, 94%);
+  --error: hsl(354, 70%, 45%);
+  --error-light: hsl(354, 70%, 94%);
+  
+  --gold: hsl(43, 96%, 48%);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(18, 30, 50, 0.05), 0 1px 3px rgba(18, 30, 50, 0.02);
+  --shadow-lg: 0 12px 24px rgba(18, 30, 50, 0.08), 0 4px 8px rgba(18, 30, 50, 0.04);
+  
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  /* Tema Escuro (Premium Gamer/Neon) */
+  --bg-primary: hsl(224, 18%, 8%);
+  --bg-secondary: hsl(224, 18%, 12%);
+  --bg-tertiary: hsl(224, 18%, 18%);
+  --border: hsl(224, 12%, 20%);
+  --text-primary: hsl(220, 20%, 96%);
+  --text-secondary: hsl(220, 9%, 70%);
+  --text-tertiary: hsl(220, 8%, 50%);
+  
+  --accent: hsl(210, 100%, 55%);
+  --accent-hover: hsl(210, 100%, 65%);
+  --accent-light: hsl(210, 100%, 15%);
+  
+  --success: hsl(142, 70%, 45%);
+  --success-light: hsl(142, 60%, 12%);
+  --warning: hsl(38, 92%, 55%);
+  --warning-light: hsl(38, 92%, 14%);
+  --error: hsl(354, 70%, 55%);
+  --error-light: hsl(354, 70%, 14%);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Reset Global e Estilos Básicos */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: var(--transition);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+button, input, select {
+  font-family: inherit;
+}
+
+/* Scrollbar premium */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Utilitários de Animação e Efeitos */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
