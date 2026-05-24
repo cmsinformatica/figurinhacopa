@@ -415,7 +415,7 @@ export const syncAllDataWithSupabase = async () => {
   console.log('[Supabase Sync] Sincronização em nuvem concluída.');
 };
 
-// Inicializa o álbum do usuário logado localmente
+// Inicializa o álbum do usuário logado localmente (100% limpo por padrão)
 export const initUserAlbum = () => {
   const key = 'figucopa_user_album';
   if (!localStorage.getItem(key)) {
@@ -423,16 +423,6 @@ export const initUserAlbum = () => {
     getStickersList().forEach(st => {
       defaultAlbum[st.id] = { owned: false, extra: 0 };
     });
-    // Populando algumas figurinhas iniciais interativas baseadas na Copa 2026
-    defaultAlbum['BRA-01'] = { owned: true, extra: 1 }; // Tem repetida
-    defaultAlbum['BRA-09'] = { owned: true, extra: 2 }; // Tem repetidas
-    defaultAlbum['ARG-02'] = { owned: true, extra: 1 }; // Tem repetida
-    defaultAlbum['GER-02'] = { owned: true, extra: 1 }; // Tem repetida
-    defaultAlbum['POR-07'] = { owned: false, extra: 0 }; // Faltante importante
-    defaultAlbum['BRA-10'] = { owned: false, extra: 0 }; // Faltante importante
-    defaultAlbum['USA-10'] = { owned: false, extra: 0 }; // Faltante importante
-    defaultAlbum['NOR-09'] = { owned: false, extra: 0 }; // Faltante importante
-    
     localStorage.setItem(key, JSON.stringify(defaultAlbum));
   }
 };
@@ -907,30 +897,30 @@ export const toggleEventConfirmation = (eventId) => {
   return added;
 };
 
-// --- MOCK DE NOTÍCIAS DA COPA 2026 (PRD F07) ---
+// --- NOTÍCIAS REAIS E OFICIAIS DO SITE DA FIFA DA COPA 2026 ---
 export const MOCK_NEWS = [
   {
     id: 'news_1',
-    title: 'Arena Fonte Nova Aprovada pela FIFA 🏟️',
-    summary: 'A Fonte Nova passa na vistoria e está confirmada como Centro Oficial de Treinamento da Copa de 2026!',
-    tag: 'Salvador'
+    title: 'Estádio Azteca Sediará Jogo de Abertura da Copa 2026! 🏟️🇲🇽',
+    summary: 'A FIFA confirmou oficialmente que o lendário e histórico Estádio Azteca, na Cidade do México, sediará a grande partida de abertura no dia 11 de junho de 2026.',
+    tag: 'Abertura'
   },
   {
     id: 'news_2',
-    title: 'Messi disputará a Copa 2026! 🇦🇷👑',
-    summary: 'O capitão argentino confirma presença no torneio de 48 países da América do Norte: "Último grande objetivo".',
-    tag: 'Internacional'
+    title: 'MetLife Stadium em Nova York Sediará a Grande Final! 🏆🇺🇸',
+    summary: 'A decisão do maior torneio de futebol do planeta, que contará pela primeira vez com 48 equipes, foi agendada para o dia 19 de julho de 2026 em Nova York / Nova Jersey.',
+    tag: 'Grande Final'
   },
   {
     id: 'news_3',
-    title: 'Ingressos da Copa 2026 no Brasil 🎟️',
-    summary: 'FIFA anuncia sistema especial de pré-reserva com descontos exclusivos para torcedores residentes no país.',
-    tag: 'Serviço'
+    title: 'Canadá fará sua Estreia Histórica em Toronto! 🍁🇨🇦',
+    summary: 'A seleção do Canadá jogará sua primeira partida oficial jogando em casa na história das Copas no dia 12 de junho de 2026 no BMO Field, em Toronto.',
+    tag: 'Canadá'
   },
   {
     id: 'news_4',
-    title: 'Neymar Jr Focado no Hexa 🇧🇷⭐',
-    summary: '100% recuperado, o craque inicia treinos de intensidade visando a estreia da Seleção no torneio mundial.',
-    tag: 'Seleção'
+    title: 'Novo Formato Oficial com 104 Jogos Aprovado! ⚽🌍',
+    summary: 'O Conselho da FIFA ratificou a expansão para 48 seleções divididas em 12 grupos de 4 equipes, garantindo o maior e mais espetacular torneio da história.',
+    tag: 'Regulamento'
   }
 ];
