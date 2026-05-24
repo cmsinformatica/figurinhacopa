@@ -2,25 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Send, MapPin, CheckCircle2, TrendingUp, Filter, Compass, Calendar, Newspaper } from 'lucide-react';
 import { MEETING_POINTS, MOCK_EVENTS, MOCK_NEWS, getConfirmedEvents, toggleEventConfirmation } from '../db.js';
 
-export default function MatchFeed({ matches, onProposeTrade }) {
+export default function MatchFeed({ matches, onProposeTrade, realStats, profile }) {
   const [successModal, setSuccessModal] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'radar'
   const [selectedRadarMatch, setSelectedRadarMatch] = useState(null);
   const [confirmedEvents, setConfirmedEvents] = useState(() => getConfirmedEvents());
-  
-  // Contador vivo de trocas simulado para Salvador
-  const [liveTradesCount, setLiveTradesCount] = useState(847291);
 
   // Estados dos Filtros de Proximidade (Salvador, Bahia)
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All'); // 'All' | 'Barra' | 'Rio Vermelho' | 'Pituba'
   const [maxDistance, setMaxDistance] = useState(99); // 99 (Todos) | 1.0 (1km) | 2.0 (2km) | 3.0 (3km)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveTradesCount(prev => prev + Math.floor(Math.random() * 3) + 1);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   const triggerProposeTrade = (match) => {
     setSuccessModal(match);
@@ -51,14 +41,10 @@ export default function MatchFeed({ matches, onProposeTrade }) {
   });
 
   const marqueeItems = [
-    { text: "⚽ BRA-10 trocada na Barra, Salvador • há 4s", color: "var(--success)" },
-    { text: "⭐ Messi ARG-10 encontrada no Rio Vermelho • há 11s", color: "var(--gold)" },
-    { text: "⚽ MEX-01 trocada na Pituba • há 18s", color: "var(--success)" },
-    { text: "⚡ 142 matches gerados em Salvador agora", color: "var(--accent)" },
-    { text: "⚽ CAN-01 trocada no Caminho das Árvores • há 24s", color: "var(--success)" },
-    { text: "⭐ C. Ronaldo POR-07 encontrada no Pelourinho • há 31s", color: "var(--gold)" },
-    { text: "⚽ GER-10 trocada em Itapuã • há 38s", color: "var(--success)" },
-    { text: "🔥 2.418 colecionadores ativos no bairro", color: "var(--warning)" }
+    { text: `⚽ ${realStats?.collectorsCount || 1} Colecionadores cadastrados na Arena de Salvador`, color: "var(--success)" },
+    { text: `⚡ ${matches?.length || 0} Matches bilaterais de trocas disponíveis para você`, color: "var(--accent)" },
+    { text: `📅 Ponto de Encontro Seguro sugerido no seu bairro: ${MEETING_POINTS[profile?.neighborhood] || 'Farol da Barra'}`, color: "var(--warning)" },
+    { text: `🏆 Álbum Oficial de 980 cromos e 68 brilhantes ativo no banco Supabase`, color: "var(--gold)" }
   ];
 
   return (
@@ -106,21 +92,25 @@ export default function MatchFeed({ matches, onProposeTrade }) {
           <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border)', textAlign: 'center' }}>
             <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Trocas Concluídas</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0', fontFamily: 'monospace' }}>
-              {liveTradesCount.toLocaleString()}
+              {(realStats?.tradesCount || 0).toLocaleString()}
             </div>
-            <span style={{ fontSize: '0.6rem', color: 'var(--success)', fontWeight: 'bold' }}>+12.847 hoje</span>
+            <span style={{ fontSize: '0.6rem', color: 'var(--success)', fontWeight: 'bold' }}>tempo real</span>
           </div>
 
           <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border)', textAlign: 'center' }}>
             <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Colecionadores</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>48.291</div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 'bold' }}>2.418 online</span>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
+              {realStats?.collectorsCount || 1}
+            </div>
+            <span style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 'bold' }}>{realStats?.onlineCount || 1} online</span>
           </div>
 
           <div style={{ background: 'rgba(0,0,0,0.15)', padding: '12px 8px', borderRadius: '12px', border: '1px solid var(--border)', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Match Médio</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>4m 18s</div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--warning)', fontWeight: 'bold' }}>tempo recorde</span>
+            <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 'bold' }}>Seus Matches</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
+              {matches?.length || 0}
+            </div>
+            <span style={{ fontSize: '0.65rem', color: 'var(--warning)', fontWeight: 'bold' }}>matches ativos</span>
           </div>
         </div>
       </section>

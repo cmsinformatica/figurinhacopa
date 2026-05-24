@@ -73,7 +73,7 @@ export default function Header({ currentTab, setCurrentTab, isAdmin, onLogout })
             </h1>
             <span style={{ fontSize: '0.55rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
               <span className="pulse-dot" style={{ width: '4px', height: '4px', marginRight: '4px' }}></span>
-              847 Pontos Ativos
+              Salvador, Bahia
             </span>
           </div>
         </div>

@@ -7,7 +7,7 @@ import ProfileTab from './components/ProfileTab.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import { supabase } from './supabaseClient.js';
-import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase } from './db.js';
+import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase, fetchRealCollectorsAndCalculateMatches } from './db.js';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('matches');
@@ -111,7 +111,46 @@ export default function App() {
     setCurrentTab('chat');
   };
 
-  const matches = calculateMatches();
+  const [realMatches, setRealMatches] = useState([]);
+  const [realStats, setRealStats] = useState({ collectorsCount: 1, tradesCount: 0, onlineCount: 1 });
+
+  // Sincroniza e busca os matches e estatísticas reais do Supabase
+  useEffect(() => {
+    if (!session || !profile) return;
+
+    const loadRealtimeFeed = async () => {
+      try {
+        const calculatedMatches = await fetchRealCollectorsAndCalculateMatches(profile, album);
+        setRealMatches(calculatedMatches);
+
+        // Busca estatísticas reais de cadastrados e trocas
+        const { count: cCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('completed_trades');
+
+        let totalTrades = 0;
+        if (profilesData) {
+          totalTrades = profilesData.reduce((sum, p) => sum + (p.completed_trades || 0), 0);
+        }
+
+        setRealStats({
+          collectorsCount: cCount || 1,
+          tradesCount: totalTrades,
+          onlineCount: Math.max(1, Math.round((cCount || 1) * 0.35))
+        });
+      } catch (err) {
+        console.warn('Erro ao carregar dados em tempo real:', err.message);
+      }
+    };
+
+    loadRealtimeFeed();
+    const interval = setInterval(loadRealtimeFeed, 8000);
+    return () => clearInterval(interval);
+  }, [session, profile, album]);
 
   if (loadingSession) {
     return (
@@ -154,7 +193,12 @@ export default function App() {
         }}
       >
         {currentTab === 'matches' && (
-          <MatchFeed matches={matches} onProposeTrade={handleProposeTrade} />
+          <MatchFeed 
+            matches={realMatches} 
+            onProposeTrade={handleProposeTrade} 
+            realStats={realStats}
+            profile={profile}
+          />
         )}
         
         {currentTab === 'album' && (

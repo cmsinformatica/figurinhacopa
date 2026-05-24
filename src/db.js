@@ -833,6 +833,88 @@ export const calculateMatches = () => {
     .sort((a, b) => b.score - a.score); // Ordena por maior compatibilidade
 };
 
+// Busca colecionadores reais do Supabase e calcula matches bilaterais em tempo real
+export const fetchRealCollectorsAndCalculateMatches = async (currentUserProfile, currentUserAlbum) => {
+  if (!isSupabaseConfigured() || !currentUserProfile) {
+    return [];
+  }
+  try {
+    const userUuid = toUuid(currentUserProfile.id);
+    const blockedList = getBlockedUsers().map(id => toUuid(id));
+
+    // 1. Busca todos os perfis do Supabase (exceto o próprio logado e os bloqueados)
+    const { data: profiles, error: pError } = await supabase
+      .from('profiles')
+      .select('*')
+      .neq('id', userUuid);
+
+    if (pError) throw pError;
+    if (!profiles || profiles.length === 0) return [];
+
+    // Filtra os perfis que não estão bloqueados
+    const activeProfiles = profiles.filter(p => !blockedList.includes(p.id));
+
+    // 2. Busca todas as figurinhas de todos os outros usuários
+    const { data: allStickers, error: sError } = await supabase
+      .from('user_stickers')
+      .select('*')
+      .neq('user_id', userUuid);
+
+    if (sError) throw sError;
+
+    // 3. Constrói a lista de colecionadores reais de forma dinâmica
+    const collectors = activeProfiles.map(p => {
+      const userStickers = allStickers ? allStickers.filter(s => s.user_id === p.id) : [];
+      
+      // Figurinhas repetidas: owned = true e extra > 0
+      const extraStickers = userStickers.filter(s => s.owned && s.extra > 0).map(s => s.sticker_id);
+      // Figurinhas faltantes: owned = false
+      const missingStickers = userStickers.filter(s => !s.owned).map(s => s.sticker_id);
+
+      return {
+        id: fromUuid(p.id),
+        name: p.name,
+        avatar: p.avatar || p.name.substring(0, 2).toUpperCase(),
+        neighborhood: p.neighborhood,
+        distance: p.distance || `${(Math.random() * 2.5 + 0.5).toFixed(1)}km`,
+        favoriteTeam: p.favorite_team,
+        extraStickers,
+        missingStickers,
+        completedTrades: p.completed_trades || 0,
+        rating: p.rating || 5.0
+      };
+    });
+
+    // 4. Calcula matches bilaterais com base no álbum do usuário logado
+    const userExtras = Object.keys(currentUserAlbum).filter(id => currentUserAlbum[id].extra > 0);
+    const userMissing = Object.keys(currentUserAlbum).filter(id => !currentUserAlbum[id].owned);
+
+    return collectors
+      .map(col => {
+        // Figurinhas que ele tem repetidas que eu preciso
+        const youReceive = col.extraStickers.filter(stId => userMissing.includes(stId));
+        // Figurinhas que eu tenho repetidas que ele precisa
+        const youSend = col.missingStickers.filter(stId => userExtras.includes(stId));
+        
+        const totalMatchCount = youReceive.length + youSend.length;
+        const score = totalMatchCount > 0 ? Math.min(Math.round((totalMatchCount / 10) * 100), 100) : 0;
+        
+        return {
+          ...col,
+          youSend,
+          youReceive,
+          score
+        };
+      })
+      .filter(match => match.score > 0) // Mostra apenas matches úteis
+      .sort((a, b) => b.score - a.score);
+
+  } catch (err) {
+    console.error('[Supabase Realtime Matches Error]', err.message);
+    return [];
+  }
+};
+
 // --- MOCK DE EVENTOS DE TROCAS EM SALVADOR-BA (PRD F07) ---
 export const MOCK_EVENTS = [
   {
