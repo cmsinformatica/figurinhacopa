@@ -81,7 +81,12 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Revoga a permissão de execução pública por segurança (impede rpc bypass)
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM authenticated;
 
 -- Associa o trigger ao evento de cadastro de novos usuários do Supabase Auth
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
