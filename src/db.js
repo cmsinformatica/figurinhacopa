@@ -1,5 +1,40 @@
 import { supabase } from './supabaseClient.js';
 
+// Convocados oficiais da Seleção Brasileira para a Copa do Mundo 2026 (26 jogadores)
+// Fonte: Anúncio oficial em 18/05/2026 pelo técnico Carlo Ancelotti
+export const BRAZIL_SQUAD = [
+  // Goleiros
+  { pos: 'Goleiro', name: 'Alisson Becker', club: 'Liverpool' },
+  { pos: 'Goleiro', name: 'Ederson', club: 'Fenerbahçe' },
+  { pos: 'Goleiro', name: 'Weverton', club: 'Grêmio' },
+  // Defensores
+  { pos: 'Zagueiro', name: 'Marquinhos (C)', club: 'PSG' },
+  { pos: 'Zagueiro', name: 'Gabriel Magalhães', club: 'Arsenal' },
+  { pos: 'Zagueiro', name: 'Bremer', club: 'Juventus' },
+  { pos: 'Lateral', name: 'Alex Sandro', club: 'Flamengo' },
+  { pos: 'Lateral', name: 'Danilo', club: 'Flamengo' },
+  { pos: 'Lateral', name: 'Douglas Santos', club: 'Zenit' },
+  { pos: 'Zagueiro', name: 'Léo Pereira', club: 'Flamengo' },
+  { pos: 'Zagueiro', name: 'Roger Ibañez', club: 'Al-Ahli' },
+  { pos: 'Lateral', name: 'Wesley', club: 'Roma' },
+  // Meio-campistas
+  { pos: 'Volante', name: 'Casemiro (C)', club: 'Manchester United' },
+  { pos: 'Meia', name: 'Bruno Guimarães', club: 'Newcastle' },
+  { pos: 'Meia', name: 'Lucas Paquetá', club: 'Flamengo' },
+  { pos: 'Volante', name: 'Fabinho', club: 'Al-Ittihad' },
+  { pos: 'Meia', name: 'Danilo Santos', club: 'Botafogo' },
+  // Atacantes
+  { pos: 'Atacante', name: 'Vinícius Júnior', club: 'Real Madrid' },
+  { pos: 'Atacante', name: 'Raphinha', club: 'Barcelona' },
+  { pos: 'Atacante', name: 'Neymar Jr', club: 'Santos' },
+  { pos: 'Atacante', name: 'Matheus Cunha', club: 'Manchester United' },
+  { pos: 'Atacante', name: 'Gabriel Martinelli', club: 'Arsenal' },
+  { pos: 'Atacante', name: 'Endrick', club: 'Lyon' },
+  { pos: 'Atacante', name: 'Igor Thiago', club: 'Brentford' },
+  { pos: 'Atacante', name: 'Luiz Henrique', club: 'Zenit' },
+  { pos: 'Atacante', name: 'Rayan', club: 'Bournemouth' }
+];
+
 // Lista Oficial de Seleções da Copa do Mundo 2026 (48 Países) organizada por Grupos
 export const SELECTIONS = [
   // Grupo A
@@ -224,24 +259,48 @@ export const getStickersList = () => {
   // Destes, o cromo número 1 (Escudo do País) é Especial/Brilhante (total de 48 escudos especiais)
   // Total Geral de Especiais: 20 (FWC) + 48 (Escudos) = EXATAMENTE 68 figurinhas brilhantes!
   // Total Geral de Figurinhas: 20 (FWC) + 960 (Selecões) = EXATAMENTE 980 figurinhas no total!
+  // Mapeia os 19 jogadores mais relevantes do Brasil para as figurinhas 2 a 20
+  const BRA_NAMES = [
+    'Alisson Becker', 'Ederson', 'Marquinhos (C)', 'Gabriel Magalhães',
+    'Bremer', 'Alex Sandro', 'Danilo', 'Douglas Santos',
+    'Casemiro (C)', 'Neymar Jr', 'Vinícius Júnior', 'Raphinha',
+    'Bruno Guimarães', 'Lucas Paquetá', 'Fabinho', 'Gabriel Martinelli',
+    'Matheus Cunha', 'Endrick', 'Igor Thiago'
+  ];
+
   SELECTIONS.forEach(sel => {
     for (let i = 1; i <= sel.count; i++) {
+      let playerName;
+      if (i === 1) {
+        playerName = `Escudo da Seleção 🛡️`;
+      } else if (sel.id === 'BRA') {
+        playerName = BRA_NAMES[i - 2];
+      } else if (sel.id === 'ARG' && i === 10) {
+        playerName = 'Lionel Messi';
+      } else if (sel.id === 'POR' && i === 7) {
+        playerName = 'C. Ronaldo';
+      } else if (sel.id === 'FRA' && i === 10) {
+        playerName = 'K. Mbappé';
+      } else if (sel.id === 'NOR' && i === 9) {
+        playerName = 'E. Haaland';
+      } else if (sel.id === 'ENG' && i === 10) {
+        playerName = 'Harry Kane';
+      } else if (sel.id === 'USA' && i === 10) {
+        playerName = 'C. Pulisic';
+      } else if (sel.id === 'KOR' && i === 7) {
+        playerName = 'Son Heung-min';
+      } else if (sel.id === 'EGY' && i === 10) {
+        playerName = 'Mohamed Salah';
+      } else {
+        playerName = `Jogador ${i}`;
+      }
       list.push({
         id: `${sel.id}-${String(i).padStart(2, '0')}`,
         code: `${sel.id}-${String(i).padStart(2, '0')}`,
         number: i,
         team: sel.id,
-        playerName: i === 1 ? `Escudo da Seleção 🛡️` :
-                    i === 10 && sel.id === 'BRA' ? 'Neymar Jr' : 
-                    i === 10 && sel.id === 'ARG' ? 'Lionel Messi' :
-                    i === 7 && sel.id === 'POR' ? 'C. Ronaldo' : 
-                    i === 10 && sel.id === 'FRA' ? 'K. Mbappé' :
-                    i === 9 && sel.id === 'NOR' ? 'E. Haaland' :
-                    i === 10 && sel.id === 'ENG' ? 'Harry Kane' :
-                    i === 10 && sel.id === 'USA' ? 'C. Pulisic' :
-                    i === 7 && sel.id === 'KOR' ? 'Son Heung-min' :
-                    i === 10 && sel.id === 'EGY' ? 'Mohamed Salah' : `Jogador ${i}`,
-        isSpecial: i === 1, // Exatamente o Escudo número 1 é Especial
+        playerName,
+        isSpecial: i === 1,
         teamName: sel.name
       });
     }
