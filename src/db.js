@@ -890,8 +890,12 @@ export const fetchRealCollectorsAndCalculateMatches = async (currentUserProfile,
       
       // Figurinhas repetidas: owned = true e extra > 0
       const extraStickers = userStickers.filter(s => s.owned && s.extra > 0).map(s => s.sticker_id);
-      // Figurinhas faltantes: owned = false
-      const missingStickers = userStickers.filter(s => !s.owned).map(s => s.sticker_id);
+      // Figurinhas que ele possui: owned = true
+      const ownedStickerIds = userStickers.filter(s => s.owned).map(s => s.sticker_id);
+      // Figurinhas faltantes: todas as 980 figurinhas oficiais menos as que ele possui
+      const missingStickers = getStickersList()
+        .filter(st => !ownedStickerIds.includes(st.code))
+        .map(st => st.code);
 
       return {
         id: fromUuid(p.id),
