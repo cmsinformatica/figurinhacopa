@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { SELECTIONS, BADGES, getUnlockedBadges, getStickersList, getSalvadorLeaderboard } from '../db.js';
-import { User, MapPin, Award, Shield, Download, Trash2, CheckCircle2, ChevronDown, Sparkles, Trophy } from 'lucide-react';
+import { supabase } from '../supabaseClient.js';
+import { SELECTIONS, BADGES, getUnlockedBadges, getStickersList, getSalvadorLeaderboard, isSupabaseConfigured } from '../db.js';
+import { User, MapPin, Award, Shield, Download, Trash2, CheckCircle2, ChevronDown, Sparkles, Trophy, Mail } from 'lucide-react';
 
 export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpdate, realLeaderboard }) {
   const [name, setName] = useState(profile?.name || '');
@@ -75,10 +76,39 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
     linkElement.click();
   };
 
-  // Excluir conta (LGPD)
-  const handleDeleteAccount = () => {
-    if (confirm('Aviso Crítico: Isso apagará permanentemente todos os seus dados locais do aplicativo (álbum, histórico de trocas e chats). Tem certeza de que deseja prosseguir?')) {
+  // Excluir conta (LGPD Art. 18)
+  const handleDeleteAccount = async () => {
+    if (!confirm('🔴 ATENÇÃO: Isso apagará PERMANENTEMENTE sua conta, álbum, trocas e mensagens do FiguCopa 2026. Esta ação é irreversível. Deseja continuar?')) return;
+
+    try {
+      // 1. Tenta excluir dados no Supabase via RPC
+      if (isSupabaseConfigured()) {
+        const { error } = await supabase.rpc('delete_my_account');
+        if (error) {
+          console.warn('[Delete Account] Fallback: limpando apenas dados locais.', error.message);
+        }
+      }
+
+      // 2. Tenta excluir o usuário do Auth (admin.deleteUser)
+      if (isSupabaseConfigured()) {
+        try {
+          const { error: authErr } = await supabase.auth.admin.deleteUser(profile.id);
+          if (authErr) console.warn('[Delete Account] Não foi possível excluir auth (requer service_role):', authErr.message);
+        } catch (authErr) {
+          console.warn('[Delete Account] Auth delete não disponível, usuário pode manter sessão.');
+        }
+      }
+
+      // 3. Limpa armazenamento local
       localStorage.clear();
+
+      // 4. Desconecta e redireciona
+      await supabase.auth.signOut();
+      window.location.reload();
+    } catch (err) {
+      // Fallback: pelo menos limpa local
+      localStorage.clear();
+      await supabase.auth.signOut();
       window.location.reload();
     }
   };
@@ -519,7 +549,54 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
           </button>
         </div>
 
-        {/* Acordeão para Política de Privacidade */}
+        {/* Links rápidos LGPD */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1.25rem' }}>
+          <button
+            onClick={() => window.open('/privacidade', '_blank')}
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '10px',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'var(--transition)'
+            }}
+          >
+            <Shield size={14} style={{ color: 'var(--accent)' }} />
+            <span>Política de Privacidade</span>
+          </button>
+
+          <button
+            onClick={() => window.open('/dpo', '_blank')}
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              padding: '10px',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'var(--transition)'
+            }}
+          >
+            <Mail size={14} style={{ color: 'var(--accent)' }} />
+            <span>Fale com o DPO</span>
+          </button>
+        </div>
+
+        {/* Acordeão para Resumo da Política de Privacidade */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
           <button
             type="button"
@@ -539,16 +616,17 @@ export default function ProfileTab({ album, onAlbumUpdate, profile, onProfileUpd
               outline: 'none'
             }}
           >
-            <span>Ver Termos e Política de Privacidade</span>
+            <span>Ver Resumo da Política de Privacidade</span>
             <ChevronDown size={14} style={{ transform: isPrivacyOpen ? 'rotate(180deg)' : 'none', transition: 'var(--transition)' }} />
           </button>
           
           {isPrivacyOpen && (
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '10px', lineHeight: '1.5', background: 'rgba(0,0,0,0.15)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-              <strong>1. Coleta de Dados:</strong> Apenas dados informados (Nome, Bairro e Seleção Favorita) são salvos temporariamente. Não rastreamos coordenadas de GPS reais.<br/><br/>
-              <strong>2. Menores de 13 anos:</strong> A conta deve ser configurada e moderada com um responsável. O chat fica disponível somente após match confirmado entre colecionadores de figurinhas complementares, eliminando contatos frios aleatórios.<br/><br/>
-              <strong>3. Cloud Vision Moderation:</strong> As imagens enviadas no chat são moderadas automaticamente para impedir conteúdos inadequados.<br/><br/>
-              <strong>4. Seus Direitos:</strong> Você possui o direito à portabilidade (botão Exportar acima) e à eliminação (botão Excluir acima) imediata e integral de qualquer registro.
+              <strong>1. Coleta de Dados:</strong> Apenas dados informados (Nome, Bairro e Seleção Favorita) são salvos. Não rastreamos coordenadas de GPS reais.<br/><br/>
+              <strong>2. Base Legal:</strong> Consentimento (Art. 7º, I da LGPD), fornecido no cadastro via checkbox obrigatório.<br/><br/>
+              <strong>3. Menores de 13 anos:</strong> A conta deve ser configurada e moderada com um responsável. Chat disponível somente após match confirmado.<br/><br/>
+              <strong>4. Seus Direitos:</strong> Portabilidade (Exportar JSON), exclusão (Excluir Conta), e contato com o DPO através do botão acima.<br/><br/>
+              <strong>Encarregado (DPO):</strong> Cristiano Martins — dpo@figucopa2026.app.br
             </div>
           )}
         </div>

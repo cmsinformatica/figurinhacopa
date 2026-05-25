@@ -208,6 +208,18 @@ button, input, select {
   text-transform: uppercase;
 }
 
+/* Acessibilidade: respeita preferência por movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
+}
+
 /* Utilitários de Animação de Entrada */
 .animate-slide-up {
   animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;

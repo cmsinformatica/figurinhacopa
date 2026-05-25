@@ -93,3 +93,117 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================================================
+-- SEGURANÇA: ROW LEVEL SECURITY (RLS)
+-- ============================================================
+
+-- Habilita RLS em todas as tabelas
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_stickers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.trades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_confirmations ENABLE ROW LEVEL SECURITY;
+
+-- Limpa políticas existentes para evitar duplicatas
+DROP POLICY IF EXISTS "users_view_own_profile" ON public.profiles;
+DROP POLICY IF EXISTS "users_update_own_profile" ON public.profiles;
+DROP POLICY IF EXISTS "admin_view_all_profiles" ON public.profiles;
+DROP POLICY IF EXISTS "admin_update_all_profiles" ON public.profiles;
+DROP POLICY IF EXISTS "users_own_stickers_all" ON public.user_stickers;
+DROP POLICY IF EXISTS "trades_involved_users_select" ON public.trades;
+DROP POLICY IF EXISTS "trades_involved_users_insert" ON public.trades;
+DROP POLICY IF EXISTS "trades_involved_users_update" ON public.trades;
+DROP POLICY IF EXISTS "messages_involved_users_select" ON public.messages;
+DROP POLICY IF EXISTS "messages_insert_own" ON public.messages;
+DROP POLICY IF EXISTS "events_select_all" ON public.events;
+DROP POLICY IF EXISTS "events_insert_admin" ON public.events;
+DROP POLICY IF EXISTS "event_confirmations_own" ON public.event_confirmations;
+
+-- PROFILES: cada um vê/altera apenas o próprio perfil; admin vê todos
+CREATE POLICY "users_view_own_profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "users_update_own_profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "admin_view_all_profiles" ON public.profiles
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
+  );
+
+CREATE POLICY "admin_update_all_profiles" ON public.profiles
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
+  );
+
+-- USER_STICKERS: cada um vê/altera apenas os próprios stickers
+CREATE POLICY "users_own_stickers_all" ON public.user_stickers
+  FOR ALL USING (auth.uid() = user_id);
+
+-- TRADES: envolvidos (sender/receiver) podem ver, inserir e atualizar
+CREATE POLICY "trades_involved_users_select" ON public.trades
+  FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+CREATE POLICY "trades_involved_users_insert" ON public.trades
+  FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+CREATE POLICY "trades_involved_users_update" ON public.trades
+  FOR UPDATE USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+-- MESSAGES: envolvidos podem ver; apenas remetente pode inserir
+CREATE POLICY "messages_involved_users_select" ON public.messages
+  FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+CREATE POLICY "messages_insert_own" ON public.messages
+  FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+-- EVENTS: todos veem; admin cria/edita
+CREATE POLICY "events_select_all" ON public.events
+  FOR SELECT USING (TRUE);
+
+CREATE POLICY "events_insert_admin" ON public.events
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
+  );
+
+-- EVENT_CONFIRMATIONS: cada um gerencia suas próprias confirmações
+CREATE POLICY "event_confirmations_own" ON public.event_confirmations
+  FOR ALL USING (auth.uid() = user_id);
+
+-- ============================================================
+-- FUNÇÕES RPC DE SEGURANÇA
+-- ============================================================
+
+-- is_admin(): verifica se o usuário logado é administrador
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE((SELECT is_admin FROM public.profiles WHERE id = auth.uid()), FALSE);
+$$;
+
+-- delete_my_account(): auto-exclusão de conta pelo titular (LGPD Art. 18)
+CREATE OR REPLACE FUNCTION public.delete_my_account()
+RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  user_id UUID := auth.uid();
+BEGIN
+  DELETE FROM public.event_confirmations WHERE user_id = user_id;
+  DELETE FROM public.messages WHERE sender_id = user_id OR receiver_id = user_id;
+  DELETE FROM public.trades WHERE sender_id = user_id OR receiver_id = user_id;
+  DELETE FROM public.user_stickers WHERE user_id = user_id;
+  DELETE FROM public.profiles WHERE id = user_id;
+END;
+$$;
+
+-- Revoga execução pública de funções sensíveis (apenas authenticated pode chamar)
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.is_admin() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.delete_my_account() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.delete_my_account() FROM anon;

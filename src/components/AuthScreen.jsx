@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { SELECTIONS, NEIGHBORHOODS } from '../db.js';
-import { Wifi, Key, Mail, User, MapPin, CheckCircle2 } from 'lucide-react';
+import { Wifi, Key, Mail, User, MapPin, CheckCircle2, Chrome } from 'lucide-react';
 
 export default function AuthScreen({ onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,6 +11,8 @@ export default function AuthScreen({ onAuthSuccess }) {
   const [neighborhood, setNeighborhood] = useState('Barra');
   const [favoriteTeam, setFavoriteTeam] = useState('BRA');
   
+  const [lgpdConsent, setLgpdConsent] = useState(false);
+  const [showVerificationBanner, setShowVerificationBanner] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +38,12 @@ export default function AuthScreen({ onAuthSuccess }) {
           return;
         }
 
+        if (!lgpdConsent) {
+          setErrorMsg('Você precisa aceitar a Política de Privacidade para se cadastrar.');
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -43,15 +51,29 @@ export default function AuthScreen({ onAuthSuccess }) {
             data: {
               name,
               neighborhood,
-              favorite_team: favoriteTeam
+              favorite_team: favoriteTeam,
+              lgpd_consent: true,
+              lgpd_consent_at: new Date().toISOString()
             }
           }
         });
 
         if (error) throw error;
 
-        setSuccessMsg('Cadastro realizado com sucesso! Verifique seu e-mail ou faça login.');
-        setIsSignUp(false);
+        if (data?.user?.identities?.length === 0) {
+          setSuccessMsg('Este email já está cadastrado. Faça login.');
+          setIsSignUp(false);
+          setIsLoading(false);
+          return;
+        }
+
+        if (data?.user?.email_confirmed_at === null) {
+          setSuccessMsg(`Cadastro realizado! Verifique seu email ${email} e clique no link de confirmação.`);
+          setShowVerificationBanner(true);
+        } else {
+          setSuccessMsg('Cadastro realizado com sucesso! Faça login.');
+          setIsSignUp(false);
+        }
       } else {
         // Fluxo de Login (Sign In)
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -67,6 +89,30 @@ export default function AuthScreen({ onAuthSuccess }) {
       setErrorMsg(err.message || 'Ocorreu um erro ao processar sua solicitação.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMsg('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
+    } catch (err) {
+      setErrorMsg(err.message || 'Erro ao autenticar com Google.');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) return;
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
+      setSuccessMsg('Email de verificação reenviado! Verifique sua caixa de entrada.');
+    } catch (err) {
+      setErrorMsg(err.message || 'Erro ao reenviar verificação.');
     }
   };
 
@@ -119,6 +165,50 @@ export default function AuthScreen({ onAuthSuccess }) {
               ✔ {successMsg}
             </div>
           )}
+
+          {showVerificationBanner && (
+            <div style={{ background: 'var(--warning-light)', color: 'var(--warning)', border: '1px solid rgba(255,178,0,0.2)', padding: '12px 14px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', textAlign: 'center' }}>
+              <p style={{ marginBottom: '8px' }}>📧 Não recebeu o email? Verifique a caixa de spam ou reenvie.</p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                style={{ background: 'var(--warning)', color: '#000', border: 'none', borderRadius: '8px', padding: '6px 14px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Reenviar Email
+              </button>
+            </div>
+          )}
+
+          {/* Login Social */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              style={{
+                width: '100%',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '10px',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            >
+              <Chrome size={16} />
+              Entrar com Google
+            </button>
+          </div>
+
+          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '4px 0' }}>ou</div>
 
           {isSignUp && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -244,6 +334,18 @@ export default function AuthScreen({ onAuthSuccess }) {
                 </select>
               </div>
             </div>
+          )}
+
+          {isSignUp && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.7rem', color: 'var(--text-secondary)', cursor: 'pointer', lineHeight: 1.4 }}>
+              <input
+                type="checkbox"
+                checked={lgpdConsent}
+                onChange={(e) => setLgpdConsent(e.target.checked)}
+                style={{ accentColor: 'var(--accent)', width: '16px', height: '16px', flexShrink: 0 }}
+              />
+              <span>Li e aceito a <strong style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={(e) => { e.preventDefault(); window.open('/privacidade', '_blank'); }}>Política de Privacidade</strong> e autorizo o tratamento dos meus dados pessoais conforme a LGPD.</span>
+            </label>
           )}
 
           <button

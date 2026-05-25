@@ -7,8 +7,9 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [metrics, setMetrics] = useState({ totalUsers: 0, avgProgress: 0, totalEvents: 0 });
   const [showEventModal, setShowEventModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');  // Substitui alert() nativo
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Formulário de Novo Evento
   const [eventTitle, setEventTitle] = useState('');
@@ -72,7 +73,25 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
-    fetchAdminData();
+    const verifyAndLoad = async () => {
+      // Verifica se é admin via RPC server-side
+      try {
+        const { data: adminStatus, error: rpcError } = await supabase.rpc('is_admin');
+        if (rpcError) throw rpcError;
+        if (!adminStatus) {
+          setErrorMsg('⛔ Acesso negado. Você não possui permissões de administrador.');
+          setIsLoading(false);
+          return;
+        }
+        setIsAdmin(true);
+        fetchAdminData();
+      } catch (err) {
+        console.error('[Admin Panel] Erro ao verificar admin:', err.message);
+        setErrorMsg('Erro ao verificar credenciais de administrador.');
+        setIsLoading(false);
+      }
+    };
+    verifyAndLoad();
   }, []);
 
   const handleCreateEvent = async (e) => {
@@ -113,6 +132,14 @@ export default function AdminPanel() {
   };
 
   const handleToggleAdminStatus = async (user) => {
+    // Verificação dupla de segurança: confirma que quem está alterando é admin
+    const { data: confirmAdmin } = await supabase.rpc('is_admin');
+    if (!confirmAdmin) {
+      setErrorMsg('⛔ Apenas administradores podem alterar permissões. Reautentique-se.');
+      setTimeout(() => setErrorMsg(''), 4000);
+      return;
+    }
+
     const newAdminStatus = !user.is_admin;
     try {
       const { error } = await supabase
@@ -122,7 +149,6 @@ export default function AdminPanel() {
 
       if (error) throw error;
 
-      // Atualiza estado local
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_admin: newAdminStatus } : u));
     } catch (err) {
       setErrorMsg('Erro ao alterar status admin: ' + err.message);

@@ -32,6 +32,9 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const messagesEndRef = useRef(null);
+  const [lastMessageTime, setLastMessageTime] = useState(0);
+  const MESSAGE_COOLDOWN = 2000;
+  const MAX_MESSAGES_PER_MINUTE = 10;
 
   const reloadData = () => {
     setMessages(getMessages());
@@ -108,13 +111,28 @@ export default function ChatTab({ activeCollectorId, setActiveCollectorId, album
     e.preventDefault();
     if (!textInput.trim() || !activeCollectorId) return;
 
+    // Rate limiting: cooldown entre mensagens
+    const now = Date.now();
+    if (now - lastMessageTime < MESSAGE_COOLDOWN) return;
+
+    // Rate limiting: max mensagens por minuto
+    const messagesThisMinute = messages.filter(m =>
+      m.senderId === currentUserId && now - m.timestamp < 60000
+    ).length;
+    if (messagesThisMinute >= MAX_MESSAGES_PER_MINUTE) {
+      alert('Você excedeu o limite de mensagens por minuto. Aguarde um momento.');
+      return;
+    }
+
+    setLastMessageTime(now);
+
     const userMessageId = 'msg_user_' + Date.now();
     const newMsg = {
       id: userMessageId,
       senderId: currentUserId,
       receiverId: activeCollectorId,
       content: textInput,
-      timestamp: Date.now(),
+      timestamp: now,
       tradeId: activeTrade?.id || null
     };
 

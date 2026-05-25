@@ -1,0 +1,21 @@
+{
+  "name": "FiguCopa 2026",
+  "short_name": "FiguCopa 2026",
+  "description": "Troca inteligente de figurinhas da Copa do Mundo 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060a14",
+  "theme_color": "#2575fc",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["entertainment", "social", "games"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

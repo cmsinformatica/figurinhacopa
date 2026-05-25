@@ -259,7 +259,8 @@ export const BADGES = [
   { id: 'first_trade', name: 'Parceiro de Ouro', desc: 'Completou a primeira troca com sucesso', icon: '🤝' },
   { id: 'legendary', name: 'Colecionador Lendário', desc: 'Possui pelo menos um jogador estrela (Neymar Jr, Lionel Messi, C. Ronaldo ou K. Mbappé)', icon: '👑' },
   { id: 'trade_master', name: 'Negociador Supremo', desc: 'Completou 3 ou mais trocas', icon: '⚡' },
-  { id: 'patriot', name: 'Espírito de Copa', desc: 'Definiu sua seleção favorita no perfil', icon: '🇧🇷' }
+  { id: 'patriot', name: 'Espírito de Copa', desc: 'Definiu sua seleção favorita no perfil', icon: '🇧🇷' },
+  { id: 'trusted', name: 'Colecionador Confiável', desc: 'Média de avaliação superior a 4.5 estrelas nas últimas trocas', icon: '🛡️' }
 ];
 
 // --- SISTEMA DE PERSISTÊNCIA INTEGRADO ---
@@ -729,6 +730,10 @@ export const getUnlockedBadges = (album, profile) => {
   // BRA-10 (Neymar Jr), ARG-10 (Messi), POR-07 (C. Ronaldo), FRA-10 (Mbappé)
   const hasLegendary = album['BRA-10']?.owned || album['ARG-10']?.owned || album['POR-07']?.owned || album['FRA-10']?.owned;
   if (hasLegendary) unlocked.push('legendary');
+  
+  // 6. Colecionador Confiável (média de avaliação > 4.5)
+  const rating = profile.rating || 5.0;
+  if (rating >= 4.5) unlocked.push('trusted');
   
   return unlocked;
 };
