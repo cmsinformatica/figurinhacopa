@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Send, MapPin, CheckCircle2, TrendingUp, Filter, Compass, Calendar, Newspaper } from 'lucide-react';
-import { MEETING_POINTS, MOCK_EVENTS, MOCK_NEWS, getConfirmedEvents, toggleEventConfirmation } from '../db.js';
+import { MEETING_POINTS, MOCK_EVENTS, MOCK_NEWS, getConfirmedEvents, toggleEventConfirmation, NEIGHBORHOODS } from '../db.js';
 
 export default function MatchFeed({ matches, onProposeTrade, realStats, profile }) {
   const [successModal, setSuccessModal] = useState(null);
@@ -153,15 +153,11 @@ export default function MatchFeed({ matches, onProposeTrade, realStats, profile 
               }}
             >
               <option value="All" style={{ background: 'var(--bg-primary)' }}>Todos os Bairros</option>
-              <option value="Barra" style={{ background: 'var(--bg-primary)' }}>Barra</option>
-              <option value="Rio Vermelho" style={{ background: 'var(--bg-primary)' }}>Rio Vermelho</option>
-              <option value="Pituba" style={{ background: 'var(--bg-primary)' }}>Pituba</option>
-              <option value="Pelourinho" style={{ background: 'var(--bg-primary)' }}>Pelourinho</option>
-              <option value="Itapuã" style={{ background: 'var(--bg-primary)' }}>Itapuã</option>
-              <option value="Ondina" style={{ background: 'var(--bg-primary)' }}>Ondina</option>
-              <option value="Caminho das Árvores" style={{ background: 'var(--bg-primary)' }}>Caminho das Árvores</option>
-              <option value="Bonfim" style={{ background: 'var(--bg-primary)' }}>Bonfim</option>
-              <option value="Brotas" style={{ background: 'var(--bg-primary)' }}>Brotas</option>
+              {NEIGHBORHOODS.map(nb => (
+                <option key={nb} value={nb} style={{ background: 'var(--bg-primary)' }}>
+                  {nb}
+                </option>
+              ))}
             </select>
           </div>
 
