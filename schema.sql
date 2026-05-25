@@ -129,14 +129,10 @@ CREATE POLICY "users_update_own_profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "admin_view_all_profiles" ON public.profiles
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
-  );
+  FOR SELECT USING (public.is_admin());
 
 CREATE POLICY "admin_update_all_profiles" ON public.profiles
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
-  );
+  FOR UPDATE USING (public.is_admin());
 
 -- USER_STICKERS: cada um vê/altera apenas os próprios stickers
 CREATE POLICY "users_own_stickers_all" ON public.user_stickers
@@ -164,9 +160,7 @@ CREATE POLICY "events_select_all" ON public.events
   FOR SELECT USING (TRUE);
 
 CREATE POLICY "events_insert_admin" ON public.events
-  FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = TRUE)
-  );
+  FOR INSERT WITH CHECK (public.is_admin());
 
 -- EVENT_CONFIRMATIONS: cada um gerencia suas próprias confirmações
 CREATE POLICY "event_confirmations_own" ON public.event_confirmations
@@ -177,10 +171,10 @@ CREATE POLICY "event_confirmations_own" ON public.event_confirmations
 -- ============================================================
 
 -- is_admin(): verifica se o usuário logado é administrador
+-- Usa SECURITY DEFINER para evitar recursão infinita nas policies RLS
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public
 AS $$
   SELECT COALESCE((SELECT is_admin FROM public.profiles WHERE id = auth.uid()), FALSE);
 $$;
@@ -207,3 +201,38 @@ REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.is_admin() FROM anon;
 REVOKE EXECUTE ON FUNCTION public.delete_my_account() FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.delete_my_account() FROM anon;
+
+-- ============================================================
+-- TABELA DA COPA DO MUNDO 2026
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.worldcup_matches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  match_id TEXT UNIQUE NOT NULL,
+  group_name TEXT,
+  phase TEXT NOT NULL,
+  home_team TEXT,
+  away_team TEXT,
+  home_score INTEGER,
+  away_score INTEGER,
+  played BOOLEAN DEFAULT FALSE,
+  stage_name TEXT,
+  penalty_home INTEGER,
+  penalty_away INTEGER,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.worldcup_matches ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "worldcup_matches_select_all" ON public.worldcup_matches;
+DROP POLICY IF EXISTS "worldcup_matches_insert_admin" ON public.worldcup_matches;
+DROP POLICY IF EXISTS "worldcup_matches_update_admin" ON public.worldcup_matches;
+
+CREATE POLICY "worldcup_matches_select_all" ON public.worldcup_matches
+  FOR SELECT USING (TRUE);
+
+CREATE POLICY "worldcup_matches_insert_admin" ON public.worldcup_matches
+  FOR INSERT WITH CHECK (public.is_admin());
+
+CREATE POLICY "worldcup_matches_update_admin" ON public.worldcup_matches
+  FOR UPDATE USING (public.is_admin());

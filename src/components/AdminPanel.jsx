@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { toUuid, NEIGHBORHOODS } from '../db.js';
-import { Users, BarChart3, Plus, Trophy, MapPin, ShieldAlert, Award } from 'lucide-react';
+import { getWorldCupMatches, saveWorldCupMatches, updateMatchResult, SELECTIONS } from '../db.js';
+import { Users, BarChart3, Plus, Trophy, MapPin, ShieldAlert, Award, Swords, Goal } from 'lucide-react';
 
 export default function AdminPanel() {
   const [users, setUsers] = useState([]);
@@ -156,6 +157,119 @@ export default function AdminPanel() {
     }
   };
 
+  // Subcomponente: Editor de Resultados da Copa
+  function WorldCupMatchEditor() {
+    const [matches, setMatches] = useState(() => getWorldCupMatches());
+    const [selectedMatch, setSelectedMatch] = useState(null);
+    const [homeScore, setHomeScore] = useState('');
+    const [awayScore, setAwayScore] = useState('');
+    const [penaltyHome, setPenaltyHome] = useState('');
+    const [penaltyAway, setPenaltyAway] = useState('');
+    const [editSuccess, setEditSuccess] = useState('');
+
+    const handleSaveResult = (matchId) => {
+      const h = parseInt(homeScore);
+      const a = parseInt(awayScore);
+      if (isNaN(h) || isNaN(a)) { alert('Placar inválido'); return; }
+      const pH = penaltyHome ? parseInt(penaltyHome) : null;
+      const pA = penaltyAway ? parseInt(penaltyAway) : null;
+      updateMatchResult(matchId, h, a, pH, pA);
+      setMatches(getWorldCupMatches());
+      setSelectedMatch(null);
+      setHomeScore(''); setAwayScore('');
+      setPenaltyHome(''); setPenaltyAway('');
+      setEditSuccess('Resultado salvo com sucesso!');
+      setTimeout(() => setEditSuccess(''), 3000);
+    };
+
+    const unplayed = matches.filter(m => !m.played).slice(0, 20);
+    const played = matches.filter(m => m.played).slice(0, 10);
+
+    return (
+      <div>
+        {editSuccess && (
+          <div style={{ background: 'var(--success-light)', color: 'var(--success)', border: '1px solid rgba(79,243,37,0.2)', padding: '8px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold', marginBottom: '10px', textAlign: 'center' }}>
+            ✔ {editSuccess}
+          </div>
+        )}
+
+        {selectedMatch ? (
+          <div style={{ background: 'rgba(0,0,0,0.15)', borderRadius: '14px', padding: '14px', border: '1px solid var(--border)' }}>
+            <h5 style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center' }}>
+              {selectedMatch.group ? `Grupo ${selectedMatch.group}` : selectedMatch.stageName}: {getTeamName(selectedMatch.home)} vs {getTeamName(selectedMatch.away)}
+            </h5>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div>
+                <label style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 'bold' }}>{getTeamName(selectedMatch.home)}</label>
+                <input type="number" min="0" value={homeScore} onChange={e => setHomeScore(e.target.value)} placeholder="0" style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', fontSize: '0.8rem', color: '#fff', outline: 'none', marginTop: '4px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 'bold' }}>{getTeamName(selectedMatch.away)}</label>
+                <input type="number" min="0" value={awayScore} onChange={e => setAwayScore(e.target.value)} placeholder="0" style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', fontSize: '0.8rem', color: '#fff', outline: 'none', marginTop: '4px' }} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ fontSize: '0.55rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Pênaltis (casa) — opcional</label>
+                <input type="number" min="0" value={penaltyHome} onChange={e => setPenaltyHome(e.target.value)} placeholder="—" style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px', fontSize: '0.75rem', color: '#fff', outline: 'none', marginTop: '2px' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.55rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Pênaltis (fora) — opcional</label>
+                <input type="number" min="0" value={penaltyAway} onChange={e => setPenaltyAway(e.target.value)} placeholder="—" style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px', fontSize: '0.75rem', color: '#fff', outline: 'none', marginTop: '2px' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => handleSaveResult(selectedMatch.id)} style={{ flex: 1, background: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', padding: '8px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>Salvar Resultado</button>
+              <button onClick={() => setSelectedMatch(null)} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: '8px', padding: '8px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer' }}>Cancelar</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>Registre os resultados dos jogos para atualizar a classificação da Tabela da Copa 2026.</p>
+
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--warning)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Goal size={12} /> Jogos Pendentes ({unplayed.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px', maxHeight: '200px', overflowY: 'auto' }}>
+              {unplayed.map(m => (
+                <button key={m.id} onClick={() => { setSelectedMatch(m); setHomeScore(''); setAwayScore(''); }}
+                  style={{ textAlign: 'left', background: 'rgba(0,0,0,0.1)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px 10px', fontSize: '0.75rem', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'var(--transition)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,117,252,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
+                >
+                  <span><strong>{m.group || m.stageName}</strong> {getTeamName(m.home)} vs {getTeamName(m.away)}</span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 'bold' }}>Inserir</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--success)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Trophy size={12} /> Últimos Resultados Registrados
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {played.length === 0 ? (
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Nenhum resultado registrado ainda.</p>
+              ) : played.map(m => (
+                <div key={m.id} style={{ background: 'rgba(0,0,0,0.08)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px 10px', fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{getTeamName(m.home)} vs {getTeamName(m.away)}</span>
+                  <span style={{ fontWeight: 900, fontFamily: 'monospace', color: 'var(--success)' }}>
+                    {m.homeScore} x {m.awayScore}{m.penaltyHome !== null ? ` (${m.penaltyHome}-${m.penaltyAway} pen)` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const getTeamName = (id) => {
+    if (!id) return 'TBD';
+    const team = SELECTIONS.find(s => s.id === id);
+    return team ? `${team.flag} ${team.name}` : id;
+  };
+
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem' }} className="animate-slide-up">
@@ -231,6 +345,16 @@ export default function AdminPanel() {
           <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginTop: '4px' }}>{metrics.totalEvents}</div>
         </div>
       </div>
+
+      {/* ⚽ Gerenciamento da Copa 2026 */}
+      <section className="glass-ethereal" style={{ borderRadius: '20px', padding: '1.25rem', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', marginBottom: '1.5rem' }}>
+        <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Swords size={16} style={{ color: 'var(--gold)' }} />
+          <span>Gerenciar Jogos da Copa 2026</span>
+        </h4>
+
+        <WorldCupMatchEditor />
+      </section>
 
       {/* Lista de Clientes Cadastrados */}
       <section className="glass-ethereal" style={{ borderRadius: '20px', padding: '1.25rem', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>

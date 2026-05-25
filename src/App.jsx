@@ -6,6 +6,7 @@ import ChatTab from './components/ChatTab.jsx';
 import ProfileTab from './components/ProfileTab.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
+import WorldCupTable from './components/WorldCupTable.jsx';
 import { supabase } from './supabaseClient.js';
 import { getUserAlbum, calculateMatches, getUserProfile, saveUserProfile, proposeTrade, syncAllDataWithSupabase, fetchRealCollectorsAndCalculateMatches, fetchRealLeaderboard } from './db.js';
 
@@ -266,6 +267,10 @@ export default function App() {
           boxSizing: 'border-box'
         }}
       >
+        {currentTab === 'worldcup' && (
+          <WorldCupTable />
+        )}
+
         {currentTab === 'matches' && (
           <MatchFeed 
             matches={realMatches} 

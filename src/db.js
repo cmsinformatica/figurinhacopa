@@ -1059,6 +1059,177 @@ export const toggleEventConfirmation = (eventId) => {
   return added;
 };
 
+// --- TABELA DA COPA DO MUNDO 2026 — GRUPOS, JOGOS E MATA-MATA ---
+
+// Rótulos dos 12 grupos oficiais (A a L)
+export const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+
+// Mapa de grupo para cada seleção (baseado na ordem do array SELECTIONS)
+export const getTeamGroup = (teamId) => {
+  const idx = SELECTIONS.findIndex(s => s.id === teamId);
+  if (idx === -1) return null;
+  return GROUP_LABELS[Math.floor(idx / 4)];
+};
+
+// Gera a programação oficial simulada da Copa 2026 (104 jogos)
+export const generateWorldCupMatches = () => {
+  const matches = [];
+  let matchId = 1;
+
+  // Fase de Grupos: 6 rodadas por grupo (cada par joga 1x porque são 4 times)
+  // Na realidade são 3 rodadas (cada time joga 3 vezes), totalizando 6 jogos por grupo
+  GROUP_LABELS.forEach((group, gIdx) => {
+    const teams = SELECTIONS.slice(gIdx * 4, gIdx * 4 + 4).map(t => t.id);
+    if (teams.length < 4) return;
+
+    // Jogos: [0x1, 2x3, 0x2, 1x3, 0x3, 1x2] — 3 rodadas, 6 jogos
+    const groupMatches = [
+      [teams[0], teams[1]],
+      [teams[2], teams[3]],
+      [teams[0], teams[2]],
+      [teams[1], teams[3]],
+      [teams[0], teams[3]],
+      [teams[1], teams[2]]
+    ];
+
+    groupMatches.forEach(([home, away]) => {
+      matches.push({
+        id: `match_${matchId++}`,
+        group,
+        phase: 'group',
+        home,
+        away,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        date: null // Seria preenchido com datas reais
+      });
+    });
+  });
+
+  return matches;
+};
+
+// Calcula a classificação de um grupo a partir dos resultados das partidas
+export const calculateGroupStandings = (teamIds, matches) => {
+  const standings = {};
+
+  teamIds.forEach(id => {
+    standings[id] = { teamId: id, pts: 0, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0 };
+  });
+
+  matches.forEach(m => {
+    if (m.homeScore === null || m.awayScore === null) return;
+    const home = standings[m.home];
+    const away = standings[m.away];
+    if (!home || !away) return;
+
+    home.gp++; away.gp++;
+    home.gf += m.homeScore; home.ga += m.awayScore;
+    away.gf += m.awayScore; away.ga += m.homeScore;
+
+    if (m.homeScore > m.awayScore) { home.w++; home.pts += 3; home.gd += (m.homeScore - m.awayScore); away.l++; away.gd += (m.awayScore - m.homeScore); }
+    else if (m.homeScore < m.awayScore) { away.w++; away.pts += 3; away.gd += (m.awayScore - m.homeScore); home.l++; home.gd += (m.homeScore - m.awayScore); }
+    else { home.d++; away.d++; home.pts += 1; away.pts += 1; }
+  });
+
+  return Object.values(standings).sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+};
+
+// Estrutura do mata-mata (Oitavas até Final)
+export const KNOCKOUT_STAGES = [
+  { id: 'round32', name: 'Oitavas de Final', teams: 32, icon: '🔵' },
+  { id: 'round16', name: 'Oitavas', teams: 16, icon: '🟢' },
+  { id: 'quarter', name: 'Quartas de Final', teams: 8, icon: '🟡' },
+  { id: 'semi', name: 'Semifinal', teams: 4, icon: '🟠' },
+  { id: 'final', name: 'Grande Final 🏆', teams: 2, icon: '🔴' }
+];
+
+// Gera confrontos de mata-mata (placeholders — preenchidos com resultados reais via admin)
+export const generateKnockoutMatches = () => {
+  const matches = [];
+  let id = 1000;
+
+  KNOCKOUT_STAGES.forEach(stage => {
+    const numMatches = stage.teams / 2;
+    for (let i = 0; i < numMatches; i++) {
+      matches.push({
+        id: `ko_${id++}`,
+        phase: stage.id,
+        stageName: stage.name,
+        home: null,
+        away: null,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        penaltyHome: null,
+        penaltyAway: null
+      });
+    }
+  });
+
+  return matches;
+};
+
+// INICIALIZA OS DADOS DA COPA EM MEMÓRIA
+export const initWorldCupData = () => {
+  const key = 'figucopa_worldcup_matches';
+  if (!localStorage.getItem(key)) {
+    const groupMatches = generateWorldCupMatches();
+    const knockoutMatches = generateKnockoutMatches();
+    localStorage.setItem(key, JSON.stringify([...groupMatches, ...knockoutMatches]));
+  }
+
+  const standingsKey = 'figucopa_worldcup_standings_override';
+  if (!localStorage.getItem(standingsKey)) {
+    localStorage.setItem(standingsKey, JSON.stringify({}));
+  }
+};
+
+export const getWorldCupMatches = () => {
+  initWorldCupData();
+  return JSON.parse(localStorage.getItem('figucopa_worldcup_matches'));
+};
+
+export const saveWorldCupMatches = (matches) => {
+  localStorage.setItem('figucopa_worldcup_matches', JSON.stringify(matches));
+
+  if (isSupabaseConfigured()) {
+    // Sincroniza com Supabase em background
+    supabase.from('worldcup_matches').upsert(
+      matches.map(m => ({
+        match_id: m.id,
+        group_name: m.group || null,
+        phase: m.phase,
+        home_team: m.home,
+        away_team: m.away,
+        home_score: m.homeScore,
+        away_score: m.awayScore,
+        played: m.played,
+        stage_name: m.stageName || null,
+        penalty_home: m.penaltyHome || null,
+        penalty_away: m.penaltyAway || null
+      }))
+    ).then(({ error }) => {
+      if (error) console.warn('[Supabase Sync] Erro ao sincronizar jogos:', error.message);
+    });
+  }
+};
+
+export const updateMatchResult = (matchId, homeScore, awayScore, penaltyHome, penaltyAway) => {
+  const matches = getWorldCupMatches();
+  const idx = matches.findIndex(m => m.id === matchId);
+  if (idx === -1) return false;
+
+  matches[idx].homeScore = homeScore;
+  matches[idx].awayScore = awayScore;
+  matches[idx].played = true;
+  matches[idx].penaltyHome = penaltyHome || null;
+  matches[idx].penaltyAway = penaltyAway || null;
+  saveWorldCupMatches(matches);
+  return true;
+};
+
 // --- NOTÍCIAS REAIS E OFICIAIS DO SITE DA FIFA DA COPA 2026 ---
 export const MOCK_NEWS = [
   {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trophy, MessageSquare, User, RefreshCw, Activity, Award, LogOut } from 'lucide-react';
+import { Trophy, MessageSquare, User, RefreshCw, Activity, Award, LogOut, Globe } from 'lucide-react';
 import ThemeToggle from './ThemeToggle.jsx';
 import { getTrades } from '../db.js';
 
@@ -120,6 +120,26 @@ export default function Header({ currentTab, setCurrentTab, isAdmin, onLogout })
             }}
           >
             <RefreshCw size={16} style={{ animation: currentTab === 'matches' ? 'spin 12s linear infinite' : 'none' }} />
+          </button>
+
+          <button
+            onClick={() => setCurrentTab('worldcup')}
+            title="Tabela da Copa 2026"
+            style={{
+              background: currentTab === 'worldcup' ? 'var(--accent-light)' : 'transparent',
+              border: 'none',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              color: currentTab === 'worldcup' ? 'var(--accent)' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'var(--transition)',
+              boxShadow: currentTab === 'worldcup' ? '0 0 10px rgba(37, 117, 252, 0.15)' : 'none'
+            }}
+          >
+            <Globe size={16} />
           </button>
           
           <button
